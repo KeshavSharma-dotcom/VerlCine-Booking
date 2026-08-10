@@ -9,10 +9,17 @@ const verifyToken = (req, res, next) => {
         })
     }
     try {
-        req.user = jwt.verify(token, process.env.JWT_SECRET)
+        const decoded = jwt.verify(token, process.env.JWT_SECRET)
+        if (decoded.is2FAEnabled && !decoded.is2FAVerified) {
+            return res.status(403).json({
+                success: false,
+                message: "2FA verification required"
+            })
+        }
+        req.user = decoded
         next()
     } catch (err) {
-        return res.status(403).json({ message: "Invalid token" })
+        return res.status(403).json({ success: false, message: "Invalid token" })
     }
 }
 
