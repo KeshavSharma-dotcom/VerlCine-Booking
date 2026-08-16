@@ -2,6 +2,7 @@ import React, { useEffect } from "react"
 import { Routes, Route, Navigate } from "react-router-dom"
 import { Home } from "./pages/Home"
 import { MovieDetails } from "./pages/MovieDetails"
+import { SeatSelection } from "./pages/SeatSelection"
 import { Login } from "./pages/Login"
 import { Register } from "./pages/Register"
 import { PrivacySettings } from "./features/authentication/components/PrivacySettings"
@@ -25,6 +26,7 @@ const App: React.FC = () => {
         <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/movie/:movieId" element={<MovieDetails />} />
+            <Route path="/book/:showtimeId" element={<SeatSelection />} />
             <Route path="/login" element={isAuthenticated ? <Navigate to="/" /> : <Login />} />
             <Route path="/register" element={isAuthenticated ? <Navigate to="/" /> : <Register />} />
             <Route
