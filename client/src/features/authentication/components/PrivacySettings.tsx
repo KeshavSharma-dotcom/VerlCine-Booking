@@ -5,7 +5,7 @@ import {
     useVerify2FAToggleMutation,
     useDisable2FAMutation
 } from "../services/authApi"
-import "../assets/styles/privacy.css"
+import "../../../assets/styles/privacy.css"
 
 export const PrivacySettings: React.FC = () => {
     const { data } = useGetCurrentUserQuery()

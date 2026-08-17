@@ -26,7 +26,7 @@
     }
 
     .movie-card {
-        @apply bg-slate-800 rounded-xl overflow-hidden border border-slate-700 hover:border-indigo-500/50 transition duration-300 flex flex-col group;
+        @apply bg-slate-800 rounded-xl overflow-hidden border border-slate-700 hover:border-indigo-500/50 transition duration-300 flex flex-col;
     }
 
     .movie-poster-wrapper {

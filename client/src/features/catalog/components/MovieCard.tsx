@@ -9,7 +9,7 @@ interface MovieCardProps {
 
 export const MovieCard: React.FC<MovieCardProps> = ({ movie }) => {
     return (
-        <div className="movie-card">
+        <div className="movie-card group">
             <div className="movie-poster-wrapper">
                 <img src={movie.posterUrl} alt={movie.title} className="movie-poster-img" />
             </div>
