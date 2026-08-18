@@ -1,16 +1,18 @@
-const mongoose = require("mongoose")
+const mongoose = require('mongoose')
 
 const bookingSchema = new mongoose.Schema(
     {
         user: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: "User",
-            required: true
+            ref: 'User',
+            required: true,
+            index: true
         },
         showtime: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: "Showtime",
-            required: true
+            ref: 'Showtime',
+            required: true,
+            index: true
         },
         seatsBooked: [
             {
@@ -20,7 +22,13 @@ const bookingSchema = new mongoose.Schema(
         ],
         totalAmount: {
             type: Number,
-            required: true
+            required: true,
+            min: 0
+        },
+        payment: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Payment',
+            default: null
         },
         qrCodeData: {
             type: String,
@@ -32,13 +40,12 @@ const bookingSchema = new mongoose.Schema(
         },
         status: {
             type: String,
-            enum: ["confirmed", "cancelled"],
-            default: "confirmed"
+            enum: ['pending', 'confirmed', 'cancelled'],
+            default: 'pending'
         }
     },
     { timestamps: true }
 )
 
-const Booking = mongoose.model("Booking", bookingSchema)
-
+const Booking = mongoose.model('Booking', bookingSchema)
 module.exports = Booking

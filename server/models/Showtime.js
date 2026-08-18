@@ -29,26 +29,35 @@ const showtimeSchema = new mongoose.Schema(
         movie: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "Movie",
-            required: true
+            required: true,
+            index: true
         },
         theatre: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: "User",
+            ref: "Theatre",
+            required: true,
+            index: true
+        },
+        screenNumber: {
+            type: Number,
             required: true
         },
         startTime: {
             type: Date,
-            required: true
+            required: true,
+            index: true
         },
         ticketPrice: {
             type: Number,
-            required: true
+            required: true,
+            min: 0
         },
         seats: [seatSchema]
     },
     { timestamps: true }
 )
 
-const Showtime = mongoose.model("Showtime", showtimeSchema)
+showtimeSchema.index({ movie: 1, theatre: 1, startTime: 1 })
 
+const Showtime = mongoose.model("Showtime", showtimeSchema)
 module.exports = Showtime

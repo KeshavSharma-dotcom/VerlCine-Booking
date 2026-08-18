@@ -1,29 +1,4 @@
-const mongoose = require('mongoose')
-
-const showtimeSchema = new mongoose.Schema(
-    {
-        startTime: {
-            type: Date,
-            required: true
-        },
-        screenNumber: {
-            type: Number,
-            required: true,
-            min: 1
-        },
-        availableSeats: {
-            type: Number,
-            required: true,
-            min: 0
-        },
-        ticketPrice: {
-            type: Number,
-            required: true,
-            min: 0
-        }
-    },
-    { _id: true }
-)
+const mongoose = require("mongoose")
 
 const movieSchema = new mongoose.Schema(
     {
@@ -50,24 +25,33 @@ const movieSchema = new mongoose.Schema(
         },
         rating: {
             type: String,
-            enum: ['G', 'PG', 'PG-13', 'R', 'NC-17'],
-            default: 'PG-13'
+            enum: ["G", "PG", "PG-13", "R", "NC-17"],
+            default: "PG-13"
         },
         posterUrl: {
             type: String,
-            default: ''
+            default: ""
         },
         isActive: {
             type: Boolean,
             default: true,
             index: true
-        },
-        showtimes: [showtimeSchema]
+        }
     },
-    { timestamps: true }
+    {
+        timestamps: true,
+        toJSON: { virtuals: true },
+        toObject: { virtuals: true }
+    }
 )
 
-movieSchema.index({ title: 'text', description: 'text' })
+movieSchema.index({ title: "text", description: "text" })
 
-const Movie = mongoose.model('Movie', movieSchema)
+movieSchema.virtual("showtimes", {
+    ref: "Showtime",
+    localField: "_id",
+    foreignField: "movie"
+})
+
+const Movie = mongoose.model("Movie", movieSchema)
 module.exports = Movie

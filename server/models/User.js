@@ -21,9 +21,11 @@ const userSchema = new mongoose.Schema(
             minlength: 6,
             select: false
         },
-        profilePicURL:{
-            type : String,
-            default : this.name
+        profilePicURL: {
+            type: String,
+            default: function () {
+                return `https://ui-avatars.com/api/?name=${encodeURIComponent(this.name || "User")}&background=random`
+            }
         },
         role: {
             type: String,
@@ -35,12 +37,31 @@ const userSchema = new mongoose.Schema(
             enum: ["none", "pending", "approved", "rejected"],
             default: "none"
         },
+        isVerified: {
+            type: Boolean,
+            default: false
+        },
         isTwoFactorEnabled: {
             type: Boolean,
             default: false
         },
-        twoFactorSecret: {
+        twoFactorMethod: {
             type: String,
+            enum: ["email", "phone", null],
+            default: null
+        },
+        twoFactorTarget: {
+            type: String,
+            default: null
+        },
+        tempTwoFactorTarget: {
+            type: String,
+            default: null,
+            select: false
+        },
+        tempTwoFactorMethod: {
+            type: String,
+            enum: ["email", "phone", null],
             default: null,
             select: false
         },
@@ -51,14 +72,23 @@ const userSchema = new mongoose.Schema(
         },
         otpExpiresAt: {
             type: Date,
-            default: null
+            default: null,
+            select: false
+        },
+        otpPurpose: {
+            type: String,
+            enum: ["account-verification", "2fa-setup-or-update", "2fa-login", null],
+            default: null,
+            select: false
         }
-    }, { timestamps: true }
+    },
+    { timestamps: true }
 )
 
 userSchema.pre("save", async function (next) {
     if (!this.isModified("password")) return next()
-    const salt = await bcrypt.genSalt(process.env.SALT)
+    const saltRounds = parseInt(process.env.SALT, 10) || 10
+    const salt = await bcrypt.genSalt(saltRounds)
     this.password = await bcrypt.hash(this.password, salt)
     next()
 })
@@ -68,5 +98,4 @@ userSchema.methods.matchPassword = async function (enteredPassword) {
 }
 
 const User = mongoose.model("User", userSchema)
-
 module.exports = User
