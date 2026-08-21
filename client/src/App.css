@@ -1,0 +1,121 @@
+.app-container {
+    min-height: 100vh;
+    background-color: var(--color-bg-primary);
+    color: var(--color-text-primary);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+}
+
+.app-title {
+    font-size: 2.25rem;
+    line-height: 2.5rem;
+    font-weight: 800;
+    color: var(--color-primary);
+    margin-bottom: 1rem;
+}
+
+.app-auth-card {
+    background-color: var(--color-bg-surface);
+    border: 1px solid var(--color-border-subtle);
+    padding: 1.5rem;
+    border-radius: 0.75rem;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.app-welcome-text {
+    font-size: 1.125rem;
+    line-height: 1.75rem;
+}
+
+.app-user-name {
+    font-weight: 700;
+    color: var(--color-primary-light);
+}
+
+.app-meta-text {
+    font-size: 0.75rem;
+    line-height: 1rem;
+    color: var(--color-text-secondary);
+}
+
+.app-action-group {
+    display: flex;
+    justify-content: center;
+    gap: 0.75rem;
+    padding-top: 0.5rem;
+}
+
+.app-btn-history {
+    padding: 0.5rem 1rem;
+    background-color: var(--color-primary-glow);
+    color: var(--color-primary);
+    border: 1px solid var(--color-border-glow);
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: background-color 0.2s ease;
+}
+
+.app-btn-history:hover {
+    background-color: rgba(245, 158, 11, 0.3);
+}
+
+.app-btn-logout {
+    padding: 0.5rem 1rem;
+    background-color: rgba(239, 68, 68, 0.15);
+    color: var(--color-danger);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.app-btn-logout:hover {
+    background-color: rgba(239, 68, 68, 0.25);
+}
+
+.app-guest-group {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.app-btn-login {
+    padding: 0.625rem 1.5rem;
+    background-color: var(--color-bg-surface);
+    border: 1px solid var(--color-border-subtle);
+    color: var(--color-text-primary);
+    border-radius: 0.5rem;
+    text-decoration: none;
+    font-size: 0.875rem;
+    font-weight: 600;
+    transition: border-color 0.2s ease;
+}
+
+.app-btn-login:hover {
+    border-color: var(--color-border-focus);
+}
+
+.app-btn-register {
+    padding: 0.625rem 1.5rem;
+    background-color: var(--color-primary);
+    color: var(--color-text-inverted);
+    font-weight: 700;
+    border-radius: 0.5rem;
+    text-decoration: none;
+    font-size: 0.875rem;
+    transition: background-color 0.2s ease;
+}
+
+.app-btn-register:hover {
+    background-color: var(--color-primary-hover);
+}

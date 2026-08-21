@@ -1,0 +1,122 @@
+.home-container {
+    min-height: 100vh;
+    background-color: var(--color-bg-primary);
+    color: var(--color-text-primary);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+}
+
+.home-title {
+    font-size: 2.25rem;
+    line-height: 2.5rem;
+    font-weight: 800;
+    color: var(--color-primary);
+    margin-bottom: 1rem;
+}
+
+.home-auth-card {
+    background-color: var(--color-bg-surface);
+    border: 1px solid var(--color-border-subtle);
+    padding: 1.5rem;
+    border-radius: 0.75rem;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+}
+
+.home-welcome-text {
+    font-size: 1.125rem;
+    line-height: 1.75rem;
+}
+
+.home-user-name {
+    font-weight: 700;
+    color: var(--color-primary-light);
+}
+
+.home-meta-text {
+    font-size: 0.75rem;
+    line-height: 1rem;
+    color: var(--color-text-secondary);
+}
+
+.home-action-group {
+    display: flex;
+    justify-content: center;
+    gap: 0.75rem;
+    padding-top: 0.5rem;
+}
+
+.home-btn-history {
+    padding: 0.5rem 1rem;
+    background-color: var(--color-primary-glow);
+    color: var(--color-primary);
+    border: 1px solid var(--color-border-glow);
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: background-color 0.2s ease;
+}
+
+.home-btn-history:hover {
+    background-color: rgba(245, 158, 11, 0.3);
+}
+
+.home-btn-logout {
+    padding: 0.5rem 1rem;
+    background-color: rgba(239, 68, 68, 0.15);
+    color: var(--color-danger);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.home-btn-logout:hover {
+    background-color: rgba(239, 68, 68, 0.25);
+}
+
+.home-guest-group {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.home-btn-login {
+    padding: 0.625rem 1.5rem;
+    background-color: var(--color-bg-surface);
+    border: 1px solid var(--color-border-subtle);
+    color: var(--color-text-primary);
+    border-radius: 0.5rem;
+    text-decoration: none;
+    font-size: 0.875rem;
+    font-weight: 600;
+    transition: border-color 0.2s ease;
+}
+
+.home-btn-login:hover {
+    border-color: var(--color-border-focus);
+}
+
+.home-btn-register {
+    padding: 0.625rem 1.5rem;
+    background-color: var(--color-primary);
+    color: var(--color-text-inverted);
+    font-weight: 700;
+    border-radius: 0.5rem;
+    text-decoration: none;
+    font-size: 0.875rem;
+    transition: background-color 0.2s ease;
+}
+
+.home-btn-register:hover {
+    background-color: var(--color-primary-hover);
+}
