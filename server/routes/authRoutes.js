@@ -11,7 +11,7 @@ const {
     getCurrentUser,
     logoutUser
 } = require("../controller/authController")
-const { verifyToken } = require("../middleware/verifyToken")
+const verifyToken = require("../middleware/verifyToken")
 
 router.post("/register", registerUser)
 router.post("/verify-account", verifyAccount)

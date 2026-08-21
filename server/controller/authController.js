@@ -38,7 +38,7 @@ const registerUser = async (req, res, next) => {
 
         res.status(201).json({
             success: true,
-            message: "Registration successful. Verification OTP sent to your primary email.",
+            message: "Registration successful. Please verify the OTP sent to your email to activate your account.",
             userId: user._id
         })
     } catch (err) {
@@ -211,7 +211,11 @@ const loginUser = async (req, res, next) => {
         }
 
         if (!user.isVerified) {
-            return res.status(403).json({ success: false, message: "Please verify your account before logging in", userId: user._id })
+            return res.status(403).json({
+                success: false,
+                message: "Please verify your account before logging in",
+                userId: user._id
+            })
         }
 
         if (user.isTwoFactorEnabled) {

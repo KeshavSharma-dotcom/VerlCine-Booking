@@ -1,4 +1,4 @@
-const Movie = require('../schemas/Movie')
+const Movie = require('../models/Movie')
 
 const createMovie = async (req, res) => {
     const { title, description, genre, durationMinutes, rating, posterUrl } = req.body

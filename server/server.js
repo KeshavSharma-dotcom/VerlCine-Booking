@@ -11,6 +11,9 @@ const dataSan = require("./middleware/dataSan")
 const initSocket = require("./utils/socket")
 const startReminderScheduler = require("./utils/reminderScheduler")
 
+const authRoutes = require("./routes/authRoutes")
+const movieRoutes = require("./routes/movieRoutes")
+
 const app = express()
 const server = http.createServer(app)
 
@@ -19,12 +22,19 @@ initSocket(server)
 startReminderScheduler()
 
 app.use(helmet())
-app.use(cors({origin: config.clientUrl || "http://localhost:3000"}))
+app.use(
+    cors({
+        origin: config.app.clientUrl,
+        credentials: true
+    })
+)
 app.use(cookieParser())
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 app.use(dataSan)
 
+app.use("/api/auth", authRoutes)
+app.use("/api/movies", movieRoutes)
 
 app.use((req, res, next) => {
     const error = new Error(`Not Found - ${req.originalUrl}`)
@@ -34,6 +44,6 @@ app.use((req, res, next) => {
 
 app.use(errorHandler)
 
-server.listen(config.port, () => {
-    console.log(`Server connected on port ${config.port}`)
+server.listen(config.app.port, () => {
+    console.log(`Server connected on port ${config.app.port}`)
 })

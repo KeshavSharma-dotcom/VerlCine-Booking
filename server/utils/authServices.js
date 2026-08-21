@@ -40,7 +40,7 @@ const generateAuthToken = (user, is2FAVerified = true) => {
             is2FAEnabled: user.isTwoFactorEnabled,
             is2FAVerified
         },
-        config.jwtSecret,
+        config.auth.jwtSecret,
         { expiresIn }
     )
 }
