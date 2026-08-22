@@ -1,43 +1,74 @@
-import React, { useState } from 'react'
-import { useDispatch, useSelector } from 'react-redux'
-import { registerUser, verifyAccount } from '../../redux/thunks/authThunks'
-import { Link, useNavigate } from 'react-router-dom'
+import React, { useState } from "react"
+import { useDispatch, useSelector } from "react-redux"
+import { Link, useNavigate } from "react-router-dom"
+import { registerUser, verifyAccount } from "../../redux/thunks/authThunks"
+import namedLogo from "../../assets/images/namedLogo.png"
 import "../../assets/styles/register.css"
 
 export const RegisterPage = () => {
-    const [formData, setFormData] = useState({ name: '', email: '', password: '' })
-    const [otp, setOtp] = useState('')
+    const [formData, setFormData] = useState({ name: "", email: "", password: "" })
+    const [otp, setOtp] = useState("")
+    const [validationError, setValidationError] = useState("")
+
     const dispatch = useDispatch()
     const navigate = useNavigate()
     const { tempUserId, loading, error, message, isAuthenticated } = useSelector((state) => state.auth)
 
     if (isAuthenticated) {
-        navigate('/')
+        navigate("/")
     }
 
-    const handleRegister = (e) => {
+    const handleRegisterSubmit = async (e) => {
         e.preventDefault()
+        setValidationError("")
+
+        if (!formData.name.trim() || !formData.email.trim() || !formData.password) {
+            setValidationError("All fields are required")
+            return
+        }
+
+        if (formData.password.length < 6) {
+            setValidationError("Password must be at least 6 characters")
+            return
+        }
+
         dispatch(registerUser(formData))
     }
 
-    const handleVerify = (e) => {
+    const handleVerifySubmit = async (e) => {
         e.preventDefault()
-        dispatch(verifyAccount({ userId: tempUserId, otp }))
+        setValidationError("")
+
+        if (!otp.trim() || otp.trim().length !== 6) {
+            setValidationError("Please enter a valid 6-digit OTP")
+            return
+        }
+
+        dispatch(verifyAccount({ userId: tempUserId, otp: otp.trim() }))
     }
+
+    const displayError = validationError || error
 
     return (
         <div className="register-container">
             <div className="register-card">
-                <h2 className="register-header">
-                    {tempUserId ? 'Verify Your Email' : 'Create an Account'}
-                </h2>
+                <img src={namedLogo} alt="CineVerl Logo" className="register-brand-logo" />
 
-                {error && <div className="register-error-banner">{error}</div>}
-                {message && <div className="register-success-banner">{message}</div>}
+                <h2 className="register-header">
+                    {tempUserId ? "Verify Your Email" : "Join CineVerl"}
+                </h2>
+                <p className="register-subtitle">
+                    {tempUserId
+                        ? "We sent a 6-digit verification code to your email."
+                        : "Sign up to book tickets, reserve seats, and experience movies."}
+                </p>
+
+                {displayError && <div className="register-banner-error">{displayError}</div>}
+                {message && <div className="register-banner-success">{message}</div>}
 
                 {!tempUserId ? (
-                    <form onSubmit={handleRegister} className="register-form">
-                        <div>
+                    <form onSubmit={handleRegisterSubmit} className="register-form" noValidate>
+                        <div className="register-form-group">
                             <label className="register-label">Full Name</label>
                             <input
                                 type="text"
@@ -48,7 +79,8 @@ export const RegisterPage = () => {
                                 placeholder="John Doe"
                             />
                         </div>
-                        <div>
+
+                        <div className="register-form-group">
                             <label className="register-label">Email Address</label>
                             <input
                                 type="email"
@@ -59,7 +91,8 @@ export const RegisterPage = () => {
                                 placeholder="john@example.com"
                             />
                         </div>
-                        <div>
+
+                        <div className="register-form-group">
                             <label className="register-label">Password</label>
                             <input
                                 type="password"
@@ -71,32 +104,41 @@ export const RegisterPage = () => {
                                 placeholder="••••••••"
                             />
                         </div>
+
                         <button type="submit" disabled={loading} className="register-btn-primary">
-                            {loading ? 'Sending OTP...' : 'Register'}
+                            {loading ? "Sending Code..." : "Create Account"}
                         </button>
                     </form>
                 ) : (
-                    <form onSubmit={handleVerify} className="register-form">
-                        <p className="register-label" style={{ textAlign: 'center' }}>
-                            Enter the 6-digit verification code sent to your email.
-                        </p>
-                        <input
-                            type="text"
-                            maxLength={6}
-                            required
-                            value={otp}
-                            onChange={(e) => setOtp(e.target.value)}
-                            className="register-otp-input"
-                            placeholder="000000"
-                        />
-                        <button type="submit" disabled={loading || otp.length !== 6} className="register-btn-primary">
-                            {loading ? 'Activating...' : 'Verify & Activate'}
+                    <form onSubmit={handleVerifySubmit} className="register-form">
+                        <div className="register-form-group">
+                            <input
+                                type="text"
+                                maxLength={6}
+                                required
+                                autoFocus
+                                value={otp}
+                                onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
+                                className="register-otp-input"
+                                placeholder="000000"
+                            />
+                        </div>
+
+                        <button
+                            type="submit"
+                            disabled={loading || otp.length !== 6}
+                            className="register-btn-primary"
+                        >
+                            {loading ? "Activating Account..." : "Verify & Get Started"}
                         </button>
                     </form>
                 )}
 
                 <p className="register-footer-text">
-                    Already registered? <Link to="/login" className="register-link">Log in</Link>
+                    Already have an account?{" "}
+                    <Link to="/login" className="register-link">
+                        Log in
+                    </Link>
                 </p>
             </div>
         </div>
