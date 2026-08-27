@@ -10,7 +10,6 @@ module.exports = {
     auth: {
         jwtSecret: process.env.JWT_SECRET,
         salt: process.env.SALT || 10,
-        emailRegex : /^[^\s@]+@[^\s@]+\.[^\s@]+$/
     },
     db: {
         mongoUrl: process.env.MONGO_URL,
