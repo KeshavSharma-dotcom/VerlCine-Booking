@@ -5,7 +5,7 @@ import { registerUser, verifyAccount } from "../../redux/thunks/authThunks"
 import namedLogo from "../../assets/images/namedLogo.png"
 import "../../assets/styles/register.css"
 
-export const RegisterPage = () => {
+export const Register = () => {
     const [formData, setFormData] = useState({ name: "", email: "", password: "" })
     const [otp, setOtp] = useState("")
     const [validationError, setValidationError] = useState("")
@@ -51,15 +51,20 @@ export const RegisterPage = () => {
 
     return (
         <div className="register-container">
+            <div className="register-glow-1"></div>
+            <div className="register-glow-2"></div>
+
             <div className="register-card">
-                <img src={namedLogo} alt="CineVerl Logo" className="register-brand-logo" />
+                <Link to="/" className="register-brand-link">
+                    <img src={namedLogo} alt="CineVerl Logo" className="register-brand-logo" />
+                </Link>
 
                 <h2 className="register-header">
-                    {tempUserId ? "Verify Your Email" : "Join CineVerl"}
+                    {tempUserId ? "Verify Your Email" : "Create Account"}
                 </h2>
                 <p className="register-subtitle">
                     {tempUserId
-                        ? "We sent a 6-digit verification code to your email."
+                        ? "Enter the 6-digit activation code sent to your inbox."
                         : "Sign up to book tickets, reserve seats, and experience movies."}
                 </p>
 
@@ -106,7 +111,7 @@ export const RegisterPage = () => {
                         </div>
 
                         <button type="submit" disabled={loading} className="register-btn-primary">
-                            {loading ? "Sending Code..." : "Create Account"}
+                            {loading ? "Creating Account..." : "Create Account"}
                         </button>
                     </form>
                 ) : (
@@ -129,7 +134,7 @@ export const RegisterPage = () => {
                             disabled={loading || otp.length !== 6}
                             className="register-btn-primary"
                         >
-                            {loading ? "Activating Account..." : "Verify & Get Started"}
+                            {loading ? "Verifying..." : "Confirm & Continue"}
                         </button>
                     </form>
                 )}
