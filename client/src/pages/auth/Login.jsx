@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import { loginUser, verify2FALogin } from '../../redux/thunks/authThunks'
 import { Link, useNavigate } from 'react-router-dom'
 import "../../assets/styles/login.css"
-export const LoginPage = () => {
+export const Login = () => {
     const [formData, setFormData] = useState({ email: '', password: '' })
     const [otp, setOtp] = useState('')
     const dispatch = useDispatch()

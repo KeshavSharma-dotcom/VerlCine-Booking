@@ -3,8 +3,8 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-d
 import { useDispatch } from "react-redux"
 import { checkAuthSession } from "./redux/thunks/authThunks.js"
 import { Home } from "./pages/Home"
-import { LoginPage } from "./pages/auth/Login"
-import { RegisterPage } from "./pages/auth/Register"
+import { Login } from "./pages/auth/Login"
+import { Register } from "./pages/auth/Register"
 // import BookingHistory from "./pages/user/HistoryPage"
 import ProtectedRoute from "./routes/ProtectedRoute"
 import GuestRoute from "./routes/GuestRoute"
@@ -24,7 +24,7 @@ export default function App() {
           path="/login"
           element={
             <GuestRoute>
-              <LoginPage />
+              <Login />
             </GuestRoute>
           }
         />
@@ -32,7 +32,7 @@ export default function App() {
           path="/register"
           element={
             <GuestRoute>
-              <RegisterPage />
+              <Register />
             </GuestRoute>
           }
         />
