@@ -22,15 +22,19 @@ initSocket(server)
 startReminderScheduler()
 
 app.use(helmet())
-app.use(
-    cors({
-        origin: config.app.clientUrl,
-        credentials: true
-    })
-)
+
+const corsOptions = {
+    origin: config.app.clientUrl,
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"]
+}
+
+app.use(cors(corsOptions))
+
 app.use(cookieParser())
-app.use(express.json())
-app.use(express.urlencoded({ extended: true }))
+app.use(express.json({ limit: "10mb" }))
+app.use(express.urlencoded({ extended: true, limit: "10mb" }))
 app.use(dataSan)
 
 app.use("/api/auth", authRoutes)
@@ -38,12 +42,23 @@ app.use("/api/movies", movieRoutes)
 
 app.use((req, res, next) => {
     const error = new Error(`Not Found - ${req.originalUrl}`)
-    res.status(404)
+    error.statusCode = 404
     next(error)
 })
 
 app.use(errorHandler)
 
-server.listen(config.app.port, () => {
-    console.log(`Server connected on port ${config.app.port}`)
+const PORT = config.app.port || 5000
+const runningServer = server.listen(PORT, () => {
+    console.log(`Server connected on port ${PORT}`)
+})
+
+process.on("unhandledRejection", (err) => {
+    console.error("Unhandled Rejection:", err)
+    runningServer.close(() => process.exit(1))
+})
+
+process.on("uncaughtException", (err) => {
+    console.error("Uncaught Exception:", err)
+    runningServer.close(() => process.exit(1))
 })

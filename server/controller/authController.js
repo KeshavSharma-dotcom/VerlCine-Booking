@@ -1,3 +1,4 @@
+const crypto = require("crypto")
 const User = require("../models/User")
 const {
     generateOTP,
@@ -5,10 +6,20 @@ const {
     sendAccountVerificationOTP,
     send2FAOTPNotification,
     generateAuthToken,
-    setAuthCookie
+    setAuthCookie,
+    clearAuthCookie
 } = require("../utils/authServices")
 
+const safeCompareHashes = (storedHash, providedHash) => {
+    if (!storedHash || !providedHash) return false
+    const bufA = Buffer.from(storedHash, "hex")
+    const bufB = Buffer.from(providedHash, "hex")
+    if (bufA.length !== bufB.length) return false
+    return crypto.timingSafeEqual(bufA, bufB)
+}
+
 const registerUser = async (req, res, next) => {
+    let createdUser = null
     try {
         const { name, email, password } = req.body
 
@@ -18,12 +29,29 @@ const registerUser = async (req, res, next) => {
 
         const normalizedEmail = email.toLowerCase().trim()
         const existingUser = await User.findOne({ email: normalizedEmail })
+
         if (existingUser) {
+            if (!existingUser.isVerified) {
+                const otp = generateOTP()
+                existingUser.name = name.trim()
+                existingUser.password = password
+                existingUser.otpCode = hashOTP(otp)
+                existingUser.otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000)
+                existingUser.otpPurpose = "verification"
+                await existingUser.save()
+                await sendAccountVerificationOTP(existingUser, otp)
+
+                return res.status(200).json({
+                    success: true,
+                    message: "Account pending verification. A new OTP has been sent to your email.",
+                    userId: existingUser._id
+                })
+            }
             return res.status(400).json({ success: false, message: "User already exists" })
         }
 
         const otp = generateOTP()
-        const user = await User.create({
+        createdUser = await User.create({
             name: name.trim(),
             email: normalizedEmail,
             password,
@@ -31,17 +59,20 @@ const registerUser = async (req, res, next) => {
             isTwoFactorEnabled: false,
             otpCode: hashOTP(otp),
             otpExpiresAt: new Date(Date.now() + 10 * 60 * 1000),
-            otpPurpose: "account-verification"
+            otpPurpose: "verification"
         })
 
-        await sendAccountVerificationOTP(user, otp)
+        await sendAccountVerificationOTP(createdUser, otp)
 
         res.status(201).json({
             success: true,
             message: "Registration successful. Please verify the OTP sent to your email to activate your account.",
-            userId: user._id
+            userId: createdUser._id
         })
     } catch (err) {
+        if (createdUser && createdUser._id && !createdUser.isVerified) {
+            await User.findByIdAndDelete(createdUser._id).catch(() => null)
+        }
         next(err)
     }
 }
@@ -55,11 +86,16 @@ const verifyAccount = async (req, res, next) => {
         }
 
         const user = await User.findById(userId).select("+otpCode +otpExpiresAt +otpPurpose")
-        if (!user || user.otpPurpose !== "account-verification" || !user.otpCode || user.otpExpiresAt < new Date()) {
-            return res.status(400).json({ success: false, message: "Invalid or expired verification OTP" })
+        if (!user || user.otpPurpose !== "verification" || !user.otpCode || !user.otpExpiresAt) {
+            return res.status(400).json({ success: false, message: "Invalid verification request" })
         }
 
-        if (user.otpCode !== hashOTP(otp.trim())) {
+        if (user.otpExpiresAt < new Date()) {
+            return res.status(400).json({ success: false, message: "OTP has expired. Please request a new one." })
+        }
+
+        const calculatedHash = hashOTP(otp.trim())
+        if (!safeCompareHashes(user.otpCode, calculatedHash)) {
             return res.status(400).json({ success: false, message: "Incorrect OTP" })
         }
 
@@ -89,108 +125,36 @@ const verifyAccount = async (req, res, next) => {
     }
 }
 
-const updateOrSetup2FATarget = async (req, res, next) => {
+const resendVerificationOTP = async (req, res, next) => {
     try {
-        const { method, newTarget, password } = req.body
-        const userId = req.user.id
+        const { userId, email } = req.body
+        const query = userId ? { _id: userId } : { email: email ? email.toLowerCase().trim() : null }
 
-        if (!method || !newTarget || !password) {
-            return res.status(400).json({ success: false, message: "Method, target (email/phone), and current password are required" })
+        if (!query._id && !query.email) {
+            return res.status(400).json({ success: false, message: "User ID or email is required" })
         }
 
-        if (!["email", "phone"].includes(method)) {
-            return res.status(400).json({ success: false, message: "Invalid 2FA method" })
+        const user = await User.findOne(query)
+        if (!user) {
+            return res.status(404).json({ success: false, message: "User not found" })
         }
 
-        const user = await User.findById(userId).select("+password")
-        if (!user || !(await user.matchPassword(password))) {
-            return res.status(401).json({ success: false, message: "Invalid password" })
+        if (user.isVerified) {
+            return res.status(400).json({ success: false, message: "Account is already verified" })
         }
 
-        const formattedTarget = newTarget.trim().toLowerCase()
         const otp = generateOTP()
-
-        user.tempTwoFactorTarget = formattedTarget
-        user.tempTwoFactorMethod = method
         user.otpCode = hashOTP(otp)
         user.otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000)
-        user.otpPurpose = "2fa-setup-or-update"
+        user.otpPurpose = "verification"
         await user.save()
 
-        await send2FAOTPNotification(formattedTarget, method, otp, "2FA Setup/Update")
+        await sendAccountVerificationOTP(user, otp)
 
         res.status(200).json({
             success: true,
-            message: `OTP sent to ${formattedTarget}. Verify the code to apply this 2FA target.`
-        })
-    } catch (err) {
-        next(err)
-    }
-}
-
-const confirm2FATargetUpdate = async (req, res, next) => {
-    try {
-        const { otp } = req.body
-        const userId = req.user.id
-
-        if (!otp) {
-            return res.status(400).json({ success: false, message: "OTP is required" })
-        }
-
-        const user = await User.findById(userId).select("+otpCode +otpExpiresAt +otpPurpose +tempTwoFactorTarget +tempTwoFactorMethod")
-        if (!user || user.otpPurpose !== "2fa-setup-or-update" || !user.otpCode || user.otpExpiresAt < new Date()) {
-            return res.status(400).json({ success: false, message: "Invalid or expired OTP" })
-        }
-
-        if (user.otpCode !== hashOTP(otp.trim())) {
-            return res.status(400).json({ success: false, message: "Incorrect OTP. 2FA target was not updated." })
-        }
-
-        user.isTwoFactorEnabled = true
-        user.twoFactorMethod = user.tempTwoFactorMethod
-        user.twoFactorTarget = user.tempTwoFactorTarget
-        user.tempTwoFactorMethod = null
-        user.tempTwoFactorTarget = null
-        user.otpCode = null
-        user.otpExpiresAt = null
-        user.otpPurpose = null
-        await user.save()
-
-        res.status(200).json({
-            success: true,
-            message: "2FA verified and activated on new destination",
-            isTwoFactorEnabled: user.isTwoFactorEnabled,
-            twoFactorMethod: user.twoFactorMethod,
-            twoFactorTarget: user.twoFactorTarget
-        })
-    } catch (err) {
-        next(err)
-    }
-}
-
-const disable2FA = async (req, res, next) => {
-    try {
-        const { password } = req.body
-        if (!password) {
-            return res.status(400).json({ success: false, message: "Password is required to disable 2FA" })
-        }
-
-        const user = await User.findById(req.user.id).select("+password")
-        if (!user || !(await user.matchPassword(password))) {
-            return res.status(401).json({ success: false, message: "Invalid password" })
-        }
-
-        user.isTwoFactorEnabled = false
-        user.twoFactorMethod = null
-        user.twoFactorTarget = null
-        user.tempTwoFactorMethod = null
-        user.tempTwoFactorTarget = null
-        await user.save()
-
-        res.status(200).json({
-            success: true,
-            message: "2FA disabled successfully",
-            isTwoFactorEnabled: false
+            message: "A new verification OTP has been dispatched to your email",
+            userId: user._id
         })
     } catch (err) {
         next(err)
@@ -214,7 +178,8 @@ const loginUser = async (req, res, next) => {
             return res.status(403).json({
                 success: false,
                 message: "Please verify your account before logging in",
-                userId: user._id
+                userId: user._id,
+                isUnverified: true
             })
         }
 
@@ -222,13 +187,10 @@ const loginUser = async (req, res, next) => {
             const otp = generateOTP()
             user.otpCode = hashOTP(otp)
             user.otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000)
-            user.otpPurpose = "2fa-login"
+            user.otpPurpose = "login_2fa"
             await user.save()
 
-            const targetDestination = user.twoFactorTarget || user.email
-            const targetMethod = user.twoFactorMethod || "email"
-
-            await send2FAOTPNotification(targetDestination, targetMethod, otp, "Login 2FA")
+            await send2FAOTPNotification(user, otp)
 
             const tempToken = generateAuthToken(user, false)
             setAuthCookie(res, tempToken, false)
@@ -236,7 +198,7 @@ const loginUser = async (req, res, next) => {
             return res.status(200).json({
                 success: true,
                 is2FARequired: true,
-                message: `2FA OTP sent to ${targetDestination}`
+                message: "2FA OTP sent to your registered email"
             })
         }
 
@@ -271,11 +233,16 @@ const verify2FALogin = async (req, res, next) => {
         }
 
         const user = await User.findById(userId).select("+otpCode +otpExpiresAt +otpPurpose")
-        if (!user || user.otpPurpose !== "2fa-login" || !user.otpCode || user.otpExpiresAt < new Date()) {
-            return res.status(400).json({ success: false, message: "Invalid or expired OTP" })
+        if (!user || user.otpPurpose !== "login_2fa" || !user.otpCode || !user.otpExpiresAt) {
+            return res.status(400).json({ success: false, message: "Invalid 2FA session" })
         }
 
-        if (user.otpCode !== hashOTP(otp.trim())) {
+        if (user.otpExpiresAt < new Date()) {
+            return res.status(400).json({ success: false, message: "OTP has expired. Please log in again." })
+        }
+
+        const calculatedHash = hashOTP(otp.trim())
+        if (!safeCompareHashes(user.otpCode, calculatedHash)) {
             return res.status(400).json({ success: false, message: "Incorrect OTP" })
         }
 
@@ -304,10 +271,112 @@ const verify2FALogin = async (req, res, next) => {
     }
 }
 
+const request2FAActivation = async (req, res, next) => {
+    try {
+        const { password } = req.body
+        const userId = req.user.id
+
+        if (!password) {
+            return res.status(400).json({ success: false, message: "Password is required to setup 2FA" })
+        }
+
+        const user = await User.findById(userId).select("+password")
+        if (!user || !(await user.matchPassword(password))) {
+            return res.status(401).json({ success: false, message: "Invalid password" })
+        }
+
+        if (user.isTwoFactorEnabled) {
+            return res.status(400).json({ success: false, message: "2FA is already active on this account" })
+        }
+
+        const otp = generateOTP()
+        user.otpCode = hashOTP(otp)
+        user.otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000)
+        user.otpPurpose = "login_2fa"
+        await user.save()
+
+        await send2FAOTPNotification(user, otp)
+
+        res.status(200).json({
+            success: true,
+            message: "Verification code sent to your email to confirm 2FA enablement"
+        })
+    } catch (err) {
+        next(err)
+    }
+}
+
+const confirm2FAActivation = async (req, res, next) => {
+    try {
+        const { otp } = req.body
+        const userId = req.user.id
+
+        if (!otp) {
+            return res.status(400).json({ success: false, message: "OTP is required" })
+        }
+
+        const user = await User.findById(userId).select("+otpCode +otpExpiresAt +otpPurpose")
+        if (!user || user.otpPurpose !== "login_2fa" || !user.otpCode || !user.otpExpiresAt) {
+            return res.status(400).json({ success: false, message: "Invalid request" })
+        }
+
+        if (user.otpExpiresAt < new Date()) {
+            return res.status(400).json({ success: false, message: "OTP has expired" })
+        }
+
+        const calculatedHash = hashOTP(otp.trim())
+        if (!safeCompareHashes(user.otpCode, calculatedHash)) {
+            return res.status(400).json({ success: false, message: "Incorrect OTP" })
+        }
+
+        user.isTwoFactorEnabled = true
+        user.otpCode = null
+        user.otpExpiresAt = null
+        user.otpPurpose = null
+        await user.save()
+
+        res.status(200).json({
+            success: true,
+            message: "Two-factor authentication enabled successfully",
+            isTwoFactorEnabled: true
+        })
+    } catch (err) {
+        next(err)
+    }
+}
+
+const disable2FA = async (req, res, next) => {
+    try {
+        const { password } = req.body
+        if (!password) {
+            return res.status(400).json({ success: false, message: "Password is required to disable 2FA" })
+        }
+
+        const user = await User.findById(req.user.id).select("+password")
+        if (!user || !(await user.matchPassword(password))) {
+            return res.status(401).json({ success: false, message: "Invalid password" })
+        }
+
+        user.isTwoFactorEnabled = false
+        user.otpCode = null
+        user.otpExpiresAt = null
+        user.otpPurpose = null
+        await user.save()
+
+        res.status(200).json({
+            success: true,
+            message: "2FA disabled successfully",
+            isTwoFactorEnabled: false
+        })
+    } catch (err) {
+        next(err)
+    }
+}
+
 const getCurrentUser = async (req, res, next) => {
     try {
         const user = await User.findById(req.user.id)
-            .select("name email role profilePicURL isVerified isTwoFactorEnabled twoFactorMethod twoFactorTarget theatreAdminStatus createdAt")
+            .select("name email role profilePicURL isVerified isTwoFactorEnabled theatreAdminStatus createdAt")
             .lean()
 
         if (!user) {
@@ -324,11 +393,7 @@ const getCurrentUser = async (req, res, next) => {
 }
 
 const logoutUser = (req, res) => {
-    res.clearCookie("token", {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "strict"
-    })
+    clearAuthCookie(res)
     res.status(200).json({
         success: true,
         message: "Logged out successfully"
@@ -338,11 +403,12 @@ const logoutUser = (req, res) => {
 module.exports = {
     registerUser,
     verifyAccount,
-    updateOrSetup2FATarget,
-    confirm2FATargetUpdate,
-    disable2FA,
+    resendVerificationOTP,
     loginUser,
     verify2FALogin,
+    request2FAActivation,
+    confirm2FAActivation,
+    disable2FA,
     getCurrentUser,
     logoutUser
 }
