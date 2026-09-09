@@ -1,7 +1,6 @@
 @import "tailwindcss";
 
 :root {
-  /* Core Theme: Midnight Indigo & Sunset Coral */
   --color-bg-primary: #0A0F1D;
   --color-bg-surface: #121829;
   --color-bg-elevated: #1B243B;
@@ -43,4 +42,10 @@ body {
   margin: 0;
   padding: 0;
   user-select: none;
+}
+
+input,
+textarea,
+[contenteditable="true"] {
+  user-select: text;
 }

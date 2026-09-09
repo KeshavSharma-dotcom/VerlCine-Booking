@@ -1,9 +1,14 @@
 import React from "react"
 import { Link } from "react-router-dom"
+import { useSelector, useDispatch } from "react-redux"
+import { logoutUserThunk } from "../redux/thunks/authThunks"
 import namedLogo from "../assets/images/namedLogo.png"
 import "../assets/styles/home.css"
 
 export const Home = () => {
+    const dispatch = useDispatch()
+    const { isAuthenticated, user } = useSelector((state) => state.auth)
+
     const featuredMovies = [
         {
             id: 1,
@@ -28,53 +33,70 @@ export const Home = () => {
         }
     ]
 
+    const handleLogout = () => {
+        dispatch(logoutUserThunk())
+    }
+
     return (
         <div className="home-container">
-            {/* Navigation Bar */}
             <header className="home-navbar">
                 <Link to="/" className="home-brand-logo-container">
                     <img src={namedLogo} alt="CineVerl Logo" className="home-brand-logo-img" />
                 </Link>
+
                 <div className="home-nav-actions">
-                    <Link to="/login" className="home-nav-login">
-                        Login
-                    </Link>
-                    <Link to="/register" className="home-nav-register">
-                        Get Started
-                    </Link>
+                    {isAuthenticated ? (
+                        <div className="home-nav-user-group">
+                            <span className="home-nav-username">Hi, {user?.name?.split(" ")[0]}</span>
+                            <button onClick={handleLogout} className="home-nav-logout-btn">
+                                Logout
+                            </button>
+                        </div>
+                    ) : (
+                        <>
+                            <Link to="/login" className="home-nav-login">
+                                Login
+                            </Link>
+                            <Link to="/register" className="home-nav-register">
+                                Get Started
+                            </Link>
+                        </>
+                    )}
                 </div>
             </header>
 
-            {/* Hero Section */}
             <section className="home-hero-section">
                 <div className="home-hero-glow-1"></div>
                 <div className="home-hero-glow-2"></div>
 
                 <span className="home-badge">Cinematic Experience Redefined</span>
 
-                <h2 className="home-hero-title">
+                <h1 className="home-hero-title">
                     Book Your Favorite Movies <br />
                     <span className="home-title-gradient">Without the Hassle</span>
-                </h2>
+                </h1>
 
                 <p className="home-hero-desc">
                     Explore blockbusters, reserve the best seats in the house, and dive into an unforgettable cinematic journey with CineVerl.
                 </p>
 
                 <div className="home-hero-buttons">
-                    <Link to="/register" className="home-btn-explore">
+                    <a href="#trending" className="home-btn-explore">
                         Explore Movies Now
-                    </Link>
-                    <Link to="/login" className="home-btn-signin">
-                        Sign In to Account
-                    </Link>
+                    </a>
+                    {!isAuthenticated && (
+                        <Link to="/login" className="home-btn-signin">
+                            Sign In to Account
+                        </Link>
+                    )}
                 </div>
             </section>
 
-            {/* Trending Blockbusters Section */}
-            <section className="home-trending-section">
-                <h3 className="home-section-title">Trending Now</h3>
-                <p className="home-section-subtitle">Handpicked blockbusters playing in theaters this week.</p>
+            <section id="trending" className="home-trending-section">
+                <div className="home-trending-header">
+                    <h2 className="home-section-title">Trending Now</h2>
+                    <p className="home-section-subtitle">Handpicked blockbusters playing in theaters this week.</p>
+                </div>
 
                 <div className="home-movies-grid">
                     {featuredMovies.map((movie) => (
@@ -85,8 +107,11 @@ export const Home = () => {
                             </div>
                             <div className="home-movie-content">
                                 <span className="home-movie-genre">{movie.genre}</span>
-                                <h4 className="home-movie-title">{movie.title}</h4>
-                                <Link to="/register" className="home-movie-btn">
+                                <h3 className="home-movie-title">{movie.title}</h3>
+                                <Link
+                                    to={isAuthenticated ? `/movie/${movie.id}` : "/register"}
+                                    className="home-movie-btn"
+                                >
                                     Book Tickets
                                 </Link>
                             </div>
@@ -95,10 +120,11 @@ export const Home = () => {
                 </div>
             </section>
 
-            {/* Footer */}
             <footer className="home-footer">
                 <p>&copy; {new Date().getFullYear()} CineVerl Inc. All rights reserved.</p>
             </footer>
         </div>
     )
 }
+
+export default Home

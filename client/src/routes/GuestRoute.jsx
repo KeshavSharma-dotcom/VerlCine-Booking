@@ -1,19 +1,14 @@
-import React from 'react'
-import { useSelector } from 'react-redux'
-import { Navigate } from 'react-router-dom'
+import { useSelector } from "react-redux"
+import { Navigate, Outlet } from "react-router-dom"
 
-const GuestRoute = ({ children }) => {
-    const { isAuthenticated, loading } = useSelector((state) => state.auth)
+const GuestRoute = () => {
+    const { isAuthenticated, isInitialized } = useSelector((state) => state.auth)
 
-    if (loading) {
-        return <div className="min-h-screen bg-[#0A0D14] flex items-center justify-center text-slate-400">Loading...</div>
+    if (!isInitialized) {
+        return null
     }
 
-    if (isAuthenticated) {
-        return <Navigate to="/" replace />
-    }
-
-    return children
+    return isAuthenticated ? <Navigate to="/" replace /> : <Outlet />
 }
 
 export default GuestRoute

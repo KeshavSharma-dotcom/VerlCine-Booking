@@ -1,49 +1,38 @@
 import { useEffect } from "react"
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom"
-import { useDispatch } from "react-redux"
-import { checkAuthSession } from "./redux/thunks/authThunks.js"
-import { Home } from "./pages/Home"
-import { Login } from "./pages/auth/Login"
-import { Register } from "./pages/auth/Register"
-// import BookingHistory from "./pages/user/HistoryPage"
+import { useDispatch, useSelector } from "react-redux"
+import { checkAuthThunk } from "./redux/thunks/authThunks"
+import Home from "./pages/Home"
+import Login from "./pages/auth/Login"
+import Register from "./pages/auth/Register"
 import ProtectedRoute from "./routes/ProtectedRoute"
 import GuestRoute from "./routes/GuestRoute"
 
 export default function App() {
   const dispatch = useDispatch()
+  const { isInitialized } = useSelector((state) => state.auth)
 
   useEffect(() => {
-    dispatch(checkAuthSession())
+    dispatch(checkAuthThunk())
   }, [dispatch])
+
+  if (!isInitialized) {
+    return null
+  }
 
   return (
     <Router>
       <Routes>
         <Route path="/" element={<Home />} />
-        <Route
-          path="/login"
-          element={
-            <GuestRoute>
-              <Login />
-            </GuestRoute>
-          }
-        />
-        <Route
-          path="/register"
-          element={
-            <GuestRoute>
-              <Register />
-            </GuestRoute>
-          }
-        />
-        {/* <Route
-          path="/history"
-          element={
-            <ProtectedRoute>
-              <BookingHistory />
-            </ProtectedRoute>
-          }
-        /> */}
+
+        <Route element={<GuestRoute />}>
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+        </Route>
+
+        <Route element={<ProtectedRoute />}>
+        </Route>
+
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>
