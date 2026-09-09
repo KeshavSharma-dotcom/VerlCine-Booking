@@ -1,21 +1,29 @@
+const path = require("path")
+require("dotenv").config({ path: path.resolve(__dirname, "../.env") })
 const nodemailer = require("nodemailer")
 
 const sendEmail = async (options) => {
+    const user = process.env.EMAIL_USER
+    const pass = process.env.EMAIL_PASS
+
+    if (!user || !pass) {
+        throw new Error("SMTP credentials are not set in environment variables")
+    }
+
     const transporter = nodemailer.createTransport({
-        host: process.env.EMAIL_HOST,
-        port: process.env.EMAIL_PORT,
+        service: "gmail",
         auth: {
-            user: process.env.EMAIL_USER,
-            pass: process.env.EMAIL_PASS
+            user,
+            pass
         }
     })
 
     const mailOptions = {
-        from: `MovieBooking <${process.env.EMAIL_FROM}>`,
+        from: `CineVerl <${process.env.EMAIL_FROM || user}>`,
         to: options.email,
         subject: options.subject,
         text: options.message,
-        html: options.html
+        html: options.html || `<p>${options.message}</p>`
     }
 
     await transporter.sendMail(mailOptions)

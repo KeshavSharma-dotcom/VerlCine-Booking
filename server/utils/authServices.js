@@ -20,15 +20,22 @@ const sendAccountVerificationOTP = async (user, otp) => {
     })
 }
 
-const send2FAOTPNotification = async (target, method, otp, purposeText = "2FA verification") => {
-    const message = `Your ${purposeText} code is: ${otp}. It will expire in 10 minutes.`
-    if (method === "email") {
-        await sendEmail({
-            email: target,
-            subject: `Your ${purposeText} Code`,
-            message
-        })
-    }
+const send2FAOTPNotification = async (user, otp) => {
+    const message = `Your two-factor authentication code is: ${otp}. It will expire in 10 minutes.`
+    await sendEmail({
+        email: user.email,
+        subject: "Your 2FA Verification Code",
+        message
+    })
+}
+
+const sendPasswordResetOTP = async (user, otp) => {
+    const message = `Your password reset code is: ${otp}. It will expire in 10 minutes.`
+    await sendEmail({
+        email: user.email,
+        subject: "Reset Your Password",
+        message
+    })
 }
 
 const generateAuthToken = (user, is2FAVerified = true) => {
@@ -45,13 +52,26 @@ const generateAuthToken = (user, is2FAVerified = true) => {
     )
 }
 
+const verifyAuthToken = (token) => {
+    return jwt.verify(token, config.auth.jwtSecret)
+}
+
 const setAuthCookie = (res, token, is2FAVerified = true) => {
     const maxAge = is2FAVerified ? 7 * 24 * 60 * 60 * 1000 : 10 * 60 * 1000
     res.cookie("token", token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
-        sameSite: "strict",
+        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
         maxAge
+    })
+}
+
+const clearAuthCookie = (res) => {
+    res.cookie("token", "", {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+        expires: new Date(0)
     })
 }
 
@@ -60,6 +80,9 @@ module.exports = {
     hashOTP,
     sendAccountVerificationOTP,
     send2FAOTPNotification,
+    sendPasswordResetOTP,
     generateAuthToken,
-    setAuthCookie
+    verifyAuthToken,
+    setAuthCookie,
+    clearAuthCookie
 }
