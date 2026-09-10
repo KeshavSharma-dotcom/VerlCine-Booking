@@ -1,9 +1,22 @@
 const requireRole = (...allowedRoles) => {
+    const roles = allowedRoles.flat()
+
     return (req, res, next) => {
-        if (!req.user || !allowedRoles.includes(req.user.role)) {
-            return res.status(403).json({ success: false, message: 'Access denied: insufficient permissions' })
+        if (!req.user) {
+            return res.status(401).json({
+                success: false,
+                message: "Authentication required"
+            })
         }
-        next()
+
+        if (req.user.role === "admin" || roles.includes(req.user.role)) {
+            return next()
+        }
+
+        return res.status(403).json({
+            success: false,
+            message: "Access denied: insufficient permissions"
+        })
     }
 }
 

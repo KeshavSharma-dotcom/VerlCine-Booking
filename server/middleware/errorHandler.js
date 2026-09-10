@@ -1,10 +1,41 @@
 const errorHandler = (err, req, res, next) => {
-    const currStatus = res.statusCode === 200 ? 500 : res.statusCode
-    console.error(`Global error intercepted`, err.stack || err.message)
-    res.status(currStatus).json({
+    if (res.headersSent) {
+        return next(err)
+    }
+
+    let statusCode = err.statusCode || (res.statusCode !== 200 ? res.statusCode : 500)
+    let message = err.message || "Internal Server Error"
+
+    if (err.name === "CastError") {
+        statusCode = 400
+        message = `Resource not found. Invalid identifier: ${err.value}`
+    }
+
+    if (err.code === 11000) {
+        statusCode = 400
+        const field = Object.keys(err.keyValue || {})[0] || "field"
+        message = `Duplicate value entered for ${field}. Please use another value.`
+    }
+
+    if (err.name === "ValidationError") {
+        statusCode = 400
+        message = Object.values(err.errors).map(val => val.message).join(", ")
+    }
+
+    if (err.name === "JsonWebTokenError") {
+        statusCode = 403
+        message = "Invalid token authorization"
+    }
+
+    if (err.name === "TokenExpiredError") {
+        statusCode = 401
+        message = "Session expired. Please log in again."
+    }
+
+    res.status(statusCode).json({
         success: false,
-        message: err.message || "Server Crash",
-        stack: process.env.NODE_ENV === 'production' ? null : err.stack
+        message,
+        stack: process.env.NODE_ENV === "production" ? null : err.stack
     })
 }
 

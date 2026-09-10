@@ -1,149 +1,196 @@
-const Movie = require('../models/Movie')
+const Movie = require("../models/Movie")
+const Showtime = require("../models/Showtime")
 
-const createMovie = async (req, res) => {
-    const { title, description, genre, durationMinutes, rating, posterUrl } = req.body
+const createMovie = async (req, res, next) => {
+    try {
+        const { title, description, genre, durationMinutes, rating, posterUrl } = req.body
 
-    if (!title || !description || !genre || !durationMinutes) {
-        return res.status(400).json({ message: 'Missing required movie details' })
-    }
-
-    const existingMovie = await Movie.findOne({ title: String(title).trim() })
-    if (existingMovie) {
-        return res.status(409).json({ message: 'A movie with this title already exists' })
-    }
-
-    const movie = await Movie.create({
-        title: String(title).trim(),
-        description: String(description).trim(),
-        genre: Array.isArray(genre) ? genre.map(g => String(g).trim()) : [String(genre).trim()],
-        durationMinutes: Number(durationMinutes),
-        rating: rating ? String(rating) : 'PG-13',
-        posterUrl: posterUrl ? String(posterUrl) : ''
-    })
-
-    return res.status(201).json({
-        message: 'Movie created successfully',
-        movie
-    })
-}
-
-const getAllMovies = async (req, res) => {
-    const page = Math.max(1, parseInt(req.query.page, 10) || 1)
-    const limit = Math.min(50, Math.max(1, parseInt(req.query.limit, 10) || 10))
-    const skip = (page - 1) * limit
-
-    const filter = {}
-    if (req.query.genre) {
-        filter.genre = String(req.query.genre)
-    }
-    if (req.query.active !== undefined) {
-        filter.isActive = req.query.active === 'true'
-    }
-
-    const [movies, total] = await Promise.all([
-        Movie.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit).lean(),
-        Movie.countDocuments(filter)
-    ])
-
-    return res.status(200).json({
-        movies,
-        pagination: {
-            total,
-            page,
-            limit,
-            totalPages: Math.ceil(total / limit)
+        if (!title || !description || !genre || !durationMinutes) {
+            return res.status(400).json({ success: false, message: "Missing required movie details" })
         }
-    })
+
+        const existingMovie = await Movie.findOne({ title: String(title).trim() })
+        if (existingMovie) {
+            return res.status(409).json({ success: false, message: "A movie with this title already exists" })
+        }
+
+        const movie = await Movie.create({
+            title: String(title).trim(),
+            description: String(description).trim(),
+            genre: Array.isArray(genre) ? genre.map(g => String(g).trim()) : [String(genre).trim()],
+            durationMinutes: Number(durationMinutes),
+            rating: rating ? String(rating) : "PG-13",
+            posterUrl: posterUrl ? String(posterUrl) : ""
+        })
+
+        res.status(201).json({
+            success: true,
+            message: "Movie created successfully",
+            movie
+        })
+    } catch (err) {
+        next(err)
+    }
 }
 
-const getMovieById = async (req, res) => {
-    const movie = await Movie.findById(req.params.id).lean()
-    if (!movie) {
-        return res.status(404).json({ message: 'Movie not found' })
-    }
+const getAllMovies = async (req, res, next) => {
+    try {
+        const page = Math.max(1, parseInt(req.query.page, 10) || 1)
+        const limit = Math.min(50, Math.max(1, parseInt(req.query.limit, 10) || 10))
+        const skip = (page - 1) * limit
 
-    return res.status(200).json({ movie })
+        const filter = {}
+        if (req.query.genre) {
+            filter.genre = String(req.query.genre)
+        }
+        if (req.query.active !== undefined) {
+            filter.isActive = req.query.active === "true"
+        }
+
+        const [movies, total] = await Promise.all([
+            Movie.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit).lean(),
+            Movie.countDocuments(filter)
+        ])
+
+        res.status(200).json({
+            success: true,
+            movies,
+            pagination: {
+                total,
+                page,
+                limit,
+                totalPages: Math.ceil(total / limit)
+            }
+        })
+    } catch (err) {
+        next(err)
+    }
 }
 
-const updateMovie = async (req, res) => {
-    const { title, description, genre, durationMinutes, rating, posterUrl, isActive } = req.body
+const getMovieById = async (req, res, next) => {
+    try {
+        const movie = await Movie.findById(req.params.id)
+            .populate({
+                path: "showtimes",
+                populate: { path: "theatre", select: "name location" }
+            })
+            .lean()
 
-    const updateFields = {}
-    if (title !== undefined) updateFields.title = String(title).trim()
-    if (description !== undefined) updateFields.description = String(description).trim()
-    if (genre !== undefined) updateFields.genre = Array.isArray(genre) ? genre.map(g => String(g).trim()) : [String(genre).trim()]
-    if (durationMinutes !== undefined) updateFields.durationMinutes = Number(durationMinutes)
-    if (rating !== undefined) updateFields.rating = String(rating)
-    if (posterUrl !== undefined) updateFields.posterUrl = String(posterUrl)
-    if (isActive !== undefined) updateFields.isActive = Boolean(isActive)
+        if (!movie) {
+            return res.status(404).json({ success: false, message: "Movie not found" })
+        }
 
-    const movie = await Movie.findByIdAndUpdate(
-        req.params.id,
-        { $set: updateFields },
-        { new: true, runValidators: true }
-    )
-
-    if (!movie) {
-        return res.status(404).json({ message: 'Movie not found' })
+        res.status(200).json({ success: true, movie })
+    } catch (err) {
+        next(err)
     }
-
-    return res.status(200).json({
-        message: 'Movie updated successfully',
-        movie
-    })
 }
 
-const deleteMovie = async (req, res) => {
-    const movie = await Movie.findByIdAndDelete(req.params.id)
-    if (!movie) {
-        return res.status(404).json({ message: 'Movie not found' })
-    }
+const updateMovie = async (req, res, next) => {
+    try {
+        const { title, description, genre, durationMinutes, rating, posterUrl, isActive } = req.body
 
-    return res.status(200).json({ message: 'Movie deleted successfully' })
+        const updateFields = {}
+        if (title !== undefined) updateFields.title = String(title).trim()
+        if (description !== undefined) updateFields.description = String(description).trim()
+        if (genre !== undefined) updateFields.genre = Array.isArray(genre) ? genre.map(g => String(g).trim()) : [String(genre).trim()]
+        if (durationMinutes !== undefined) updateFields.durationMinutes = Number(durationMinutes)
+        if (rating !== undefined) updateFields.rating = String(rating)
+        if (posterUrl !== undefined) updateFields.posterUrl = String(posterUrl)
+        if (isActive !== undefined) updateFields.isActive = Boolean(isActive)
+
+        const movie = await Movie.findByIdAndUpdate(
+            req.params.id,
+            { $set: updateFields },
+            { new: true, runValidators: true }
+        )
+
+        if (!movie) {
+            return res.status(404).json({ success: false, message: "Movie not found" })
+        }
+
+        res.status(200).json({
+            success: true,
+            message: "Movie updated successfully",
+            movie
+        })
+    } catch (err) {
+        next(err)
+    }
 }
 
-const addShowtime = async (req, res) => {
-    const { startTime, screenNumber, availableSeats, ticketPrice } = req.body
+const deleteMovie = async (req, res, next) => {
+    try {
+        const movie = await Movie.findByIdAndDelete(req.params.id)
+        if (!movie) {
+            return res.status(404).json({ success: false, message: "Movie not found" })
+        }
 
-    if (!startTime || !screenNumber || !availableSeats || !ticketPrice) {
-        return res.status(400).json({ message: 'Missing showtime details' })
+        await Showtime.deleteMany({ movie: req.params.id })
+
+        res.status(200).json({ success: true, message: "Movie deleted successfully" })
+    } catch (err) {
+        next(err)
     }
-
-    const movie = await Movie.findById(req.params.id)
-    if (!movie) {
-        return res.status(404).json({ message: 'Movie not found' })
-    }
-
-    movie.showtimes.push({
-        startTime: new Date(startTime),
-        screenNumber: Number(screenNumber),
-        availableSeats: Number(availableSeats),
-        ticketPrice: Number(ticketPrice)
-    })
-
-    await movie.save()
-
-    return res.status(201).json({
-        message: 'Showtime added successfully',
-        movie
-    })
 }
 
-const removeShowtime = async (req, res) => {
-    const { id, showtimeId } = req.params
+const addShowtime = async (req, res, next) => {
+    try {
+        const { theatreId, startTime, screenNumber, ticketPrice, totalSeats } = req.body
+        const movieId = req.params.id
 
-    const movie = await Movie.findById(id)
-    if (!movie) {
-        return res.status(404).json({ message: 'Movie not found' })
+        if (!theatreId || !startTime || !screenNumber || !ticketPrice) {
+            return res.status(400).json({ success: false, message: "Missing showtime details" })
+        }
+
+        const movie = await Movie.findById(movieId)
+        if (!movie) {
+            return res.status(404).json({ success: false, message: "Movie not found" })
+        }
+
+        const seatCount = Number(totalSeats) || 50
+        const generatedSeats = Array.from({ length: seatCount }, (_, idx) => ({
+            seatNumber: `${String.fromCharCode(65 + Math.floor(idx / 10))}${(idx % 10) + 1}`,
+            status: "available",
+            lockedBy: null,
+            lockedUntil: null
+        }))
+
+        const showtime = await Showtime.create({
+            movie: movieId,
+            theatre: theatreId,
+            screenNumber: Number(screenNumber),
+            startTime: new Date(startTime),
+            ticketPrice: Number(ticketPrice),
+            seats: generatedSeats
+        })
+
+        res.status(201).json({
+            success: true,
+            message: "Showtime added successfully",
+            showtime
+        })
+    } catch (err) {
+        next(err)
     }
+}
 
-    movie.showtimes = movie.showtimes.filter(st => st._id.toString() !== showtimeId)
-    await movie.save()
+const removeShowtime = async (req, res, next) => {
+    try {
+        const { showtimeId } = req.params
 
-    return res.status(200).json({
-        message: 'Showtime removed successfully',
-        movie
-    })
+        const showtime = await Showtime.findByIdAndDelete(showtimeId)
+        if (!showtime) {
+            return res.status(404).json({ success: false, message: "Showtime not found" })
+        }
+
+        res.status(200).json({
+            success: true,
+            message: "Showtime removed successfully"
+        })
+    } catch (err) {
+        next(err)
+    }
 }
 
 module.exports = {

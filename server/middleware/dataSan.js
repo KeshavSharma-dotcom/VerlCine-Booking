@@ -1,30 +1,49 @@
+const isPlainObject = (obj) => {
+    return Object.prototype.toString.call(obj) === "[object Object]"
+}
+
 const sanitize = (data) => {
-    if (typeof data === 'string') {
-        return data.replace(/\$/g, '').trim()
-    }
     if (Array.isArray(data)) {
-        return data.map(sanitize)
+        return data.map(item => sanitize(item))
     }
-    if (data !== null && typeof data === 'object') {
+
+    if (isPlainObject(data)) {
         const sanitizedObj = {}
         for (const key of Object.keys(data)) {
-            const cleanKey = key.replace(/\$/g, '')
+            if (key === "__proto__" || key === "constructor" || key === "prototype") {
+                continue
+            }
+            const cleanKey = key.replace(/[$.]/g, "")
             sanitizedObj[cleanKey] = sanitize(data[key])
         }
         return sanitizedObj
     }
+
     return data
 }
 
+const cleanObjectInPlace = (target) => {
+    if (!target || typeof target !== "object") return
+    for (const key of Object.keys(target)) {
+        if (key.includes("$") || key.includes(".")) {
+            delete target[key]
+            continue
+        }
+        if (isPlainObject(target[key]) || Array.isArray(target[key])) {
+            target[key] = sanitize(target[key])
+        }
+    }
+}
+
 const dataSan = (req, res, next) => {
-    if (req.body) {
+    if (req.body && isPlainObject(req.body)) {
         req.body = sanitize(req.body)
     }
     if (req.query) {
-        req.query = sanitize(req.query)
+        cleanObjectInPlace(req.query)
     }
     if (req.params) {
-        req.params = sanitize(req.params)
+        cleanObjectInPlace(req.params)
     }
     next()
 }

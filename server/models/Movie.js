@@ -4,24 +4,24 @@ const movieSchema = new mongoose.Schema(
     {
         title: {
             type: String,
-            required: true,
-            trim: true,
-            index: true
+            required: [true, "Movie title is required"],
+            trim: true
         },
         description: {
             type: String,
-            required: true,
+            required: [true, "Movie description is required"],
             trim: true
         },
         genre: {
             type: [String],
-            required: true,
+            required: [true, "At least one genre is required"],
             index: true
         },
         durationMinutes: {
             type: Number,
-            required: true,
-            min: 1
+            required: [true, "Movie duration is required"],
+            min: [1, "Duration must be at least 1 minute"],
+            max: [600, "Duration cannot exceed 600 minutes"]
         },
         rating: {
             type: String,
@@ -53,5 +53,6 @@ movieSchema.virtual("showtimes", {
     foreignField: "movie"
 })
 
-const Movie = mongoose.model("Movie", movieSchema)
+const Movie = mongoose.models.Movie || mongoose.model("Movie", movieSchema)
+
 module.exports = Movie
