@@ -17,7 +17,11 @@ export default function App() {
   }, [dispatch])
 
   if (!isInitialized) {
-    return null
+    return (
+      <div style={{ minHeight: "100vh", backgroundColor: "var(--color-bg-primary)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <div style={{ width: "2.5rem", height: "2.5rem", border: "3px solid var(--color-border-subtle)", borderTopColor: "var(--color-primary)", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
+      </div>
+    )
   }
 
   return (
@@ -31,6 +35,7 @@ export default function App() {
         </Route>
 
         <Route element={<ProtectedRoute />}>
+          <Route path="/movie/:id" element={<Home />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/" replace />} />

@@ -1,69 +1,32 @@
-import React from "react"
+import React, { useEffect, useState } from "react"
 import { Link } from "react-router-dom"
 import { useSelector, useDispatch } from "react-redux"
-import { logoutUserThunk } from "../redux/thunks/authThunks"
-import namedLogo from "../assets/images/namedLogo.png"
+import { fetchMovies } from "../redux/thunks/movieThunks"
+import Navbar from "../components/NavBar"
 import "../assets/styles/home.css"
 
 export const Home = () => {
     const dispatch = useDispatch()
-    const { isAuthenticated, user } = useSelector((state) => state.auth)
+    const { isAuthenticated } = useSelector((state) => state.auth)
+    const { movies, loading, error } = useSelector((state) => state.movie)
+    const [activeTab, setActiveTab] = useState("all")
 
-    const featuredMovies = [
-        {
-            id: 1,
-            title: "Interstellar Odyssey",
-            genre: "Sci-Fi / Adventure",
-            rating: "4.9",
-            image: "https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&q=80&w=600"
-        },
-        {
-            id: 2,
-            title: "Cyber City 2099",
-            genre: "Action / Thriller",
-            rating: "4.7",
-            image: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&q=80&w=600"
-        },
-        {
-            id: 3,
-            title: "The Last Horizon",
-            genre: "Drama / Mystery",
-            rating: "4.8",
-            image: "https://images.unsplash.com/photo-1485846234645-a62644f84728?auto=format&fit=crop&q=80&w=600"
-        }
-    ]
+    useEffect(() => {
+        dispatch(fetchMovies({ limit: 40 }))
+    }, [dispatch])
 
-    const handleLogout = () => {
-        dispatch(logoutUserThunk())
-    }
+    const filteredCatalog = movies.filter((item) => {
+        const isLiveShow = item.genre?.some((g) =>
+            ["Standup Comedy", "Live Show", "Music Concert", "Theatre Play"].includes(g)
+        )
+        if (activeTab === "movies") return !isLiveShow
+        if (activeTab === "shows") return isLiveShow
+        return true
+    })
 
     return (
         <div className="home-container">
-            <header className="home-navbar">
-                <Link to="/" className="home-brand-logo-container">
-                    <img src={namedLogo} alt="CineVerl Logo" className="home-brand-logo-img" />
-                </Link>
-
-                <div className="home-nav-actions">
-                    {isAuthenticated ? (
-                        <div className="home-nav-user-group">
-                            <span className="home-nav-username">Hi, {user?.name?.split(" ")[0]}</span>
-                            <button onClick={handleLogout} className="home-nav-logout-btn">
-                                Logout
-                            </button>
-                        </div>
-                    ) : (
-                        <>
-                            <Link to="/login" className="home-nav-login">
-                                Login
-                            </Link>
-                            <Link to="/register" className="home-nav-register">
-                                Get Started
-                            </Link>
-                        </>
-                    )}
-                </div>
-            </header>
+            <Navbar activeTab={activeTab} setActiveTab={setActiveTab} />
 
             <section className="home-hero-section">
                 <div className="home-hero-glow-1"></div>
@@ -77,12 +40,15 @@ export const Home = () => {
                 </h1>
 
                 <p className="home-hero-desc">
-                    Explore blockbusters, reserve the best seats in the house, and dive into an unforgettable cinematic journey with CineVerl.
+                    Explore blockbusters, reserve the best seats in the house across Jaipur, and dive into an unforgettable entertainment journey with CineVerl.
                 </p>
 
                 <div className="home-hero-buttons">
-                    <a href="#trending" className="home-btn-explore">
+                    <a href="#catalog" className="home-btn-explore" onClick={() => setActiveTab("movies")}>
                         Explore Movies Now
+                    </a>
+                    <a href="#catalog" className="home-btn-shows" onClick={() => setActiveTab("shows")}>
+                        Live Shows & Standups
                     </a>
                     {!isAuthenticated && (
                         <Link to="/login" className="home-btn-signin">
@@ -92,32 +58,76 @@ export const Home = () => {
                 </div>
             </section>
 
-            <section id="trending" className="home-trending-section">
+            <section id="catalog" className="home-trending-section">
                 <div className="home-trending-header">
-                    <h2 className="home-section-title">Trending Now</h2>
-                    <p className="home-section-subtitle">Handpicked blockbusters playing in theaters this week.</p>
+                    <div>
+                        <h2 className="home-section-title">
+                            {activeTab === "shows" ? "Live Stages & Standups" : activeTab === "movies" ? "Movies in Theatres" : "Trending in Jaipur"}
+                        </h2>
+                        <p className="home-section-subtitle">
+                            Live schedules for Raj Mandir, INOX Crystal Palm, JKK, and Birla Auditorium.
+                        </p>
+                    </div>
+                    <div className="home-filter-tabs">
+                        <button
+                            onClick={() => setActiveTab("all")}
+                            className={`home-tab-btn ${activeTab === "all" ? "active" : ""}`}
+                        >
+                            All
+                        </button>
+                        <button
+                            onClick={() => setActiveTab("movies")}
+                            className={`home-tab-btn ${activeTab === "movies" ? "active" : ""}`}
+                        >
+                            Movies
+                        </button>
+                        <button
+                            onClick={() => setActiveTab("shows")}
+                            className={`home-tab-btn ${activeTab === "shows" ? "active" : ""}`}
+                        >
+                            Live Shows
+                        </button>
+                    </div>
                 </div>
 
-                <div className="home-movies-grid">
-                    {featuredMovies.map((movie) => (
-                        <div key={movie.id} className="home-movie-card">
-                            <div className="home-movie-img-container">
-                                <img src={movie.image} alt={movie.title} className="home-movie-img" />
-                                <span className="home-movie-rating">★ {movie.rating}</span>
+                {loading ? (
+                    <div className="home-loading-state">
+                        <div className="home-spinner"></div>
+                        <p>Loading scheduled sessions...</p>
+                    </div>
+                ) : error ? (
+                    <div className="home-error-state">
+                        <p>{error}</p>
+                    </div>
+                ) : filteredCatalog.length === 0 ? (
+                    <div className="home-empty-state">
+                        <p>No shows found for this selection.</p>
+                    </div>
+                ) : (
+                    <div className="home-movies-grid">
+                        {filteredCatalog.map((item) => (
+                            <div key={item._id} className="home-movie-card">
+                                <div className="home-movie-img-container">
+                                    <img src={item.posterUrl} alt={item.title} className="home-movie-img" loading="lazy" />
+                                    <span className="home-movie-rating">{item.rating}</span>
+                                </div>
+                                <div className="home-movie-content">
+                                    <span className="home-movie-genre">{Array.isArray(item.genre) ? item.genre.join(" • ") : item.genre}</span>
+                                    <h3 className="home-movie-title">{item.title}</h3>
+                                    <div className="home-movie-footer">
+                                        <span className="home-movie-duration">{item.durationMinutes} mins</span>
+                                        <Link
+                                            to={isAuthenticated ? `/movie/${item._id}` : "/register"}
+                                            className="home-movie-btn"
+                                        >
+                                            Book Seats
+                                        </Link>
+                                    </div>
+                                </div>
                             </div>
-                            <div className="home-movie-content">
-                                <span className="home-movie-genre">{movie.genre}</span>
-                                <h3 className="home-movie-title">{movie.title}</h3>
-                                <Link
-                                    to={isAuthenticated ? `/movie/${movie.id}` : "/register"}
-                                    className="home-movie-btn"
-                                >
-                                    Book Tickets
-                                </Link>
-                            </div>
-                        </div>
-                    ))}
-                </div>
+                        ))}
+                    </div>
+                )}
             </section>
 
             <footer className="home-footer">
