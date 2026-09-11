@@ -58,6 +58,7 @@ const showtimeSchema = new mongoose.Schema(
 
 showtimeSchema.index({ movie: 1, theatre: 1, startTime: 1 })
 showtimeSchema.index({ theatre: 1, screenNumber: 1, startTime: 1 })
+showtimeSchema.index({ "seats.seatNumber": 1, "seats.status": 1 })
 showtimeSchema.index({ "seats.status": 1, "seats.lockedUntil": 1 })
 
 const Showtime = mongoose.models.Showtime || mongoose.model("Showtime", showtimeSchema)

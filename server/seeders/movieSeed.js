@@ -1,0 +1,311 @@
+const mongoose = require("mongoose")
+const bcrypt = require("bcryptjs")
+const config = require("../config/config")
+
+const User = require("../models/User")
+const Movie = require("../models/Movie")
+const Theatre = require("../models/Theatre")
+const Showtime = require("../models/Showtime")
+
+const MONGO_URI = config.db.mongoUrl || process.env.MONGO_URL
+
+const moviesData = [
+    {
+        title: "Interstellar",
+        description: "When Earth becomes uninhabitable, a team of explorers undertakes humanity's most important mission: traveling beyond our galaxy to discover a new home.",
+        genre: ["Sci-Fi", "Adventure", "Drama"],
+        durationMinutes: 169,
+        rating: "PG-13",
+        posterUrl: "https://images.unsplash.com/photo-1506703719100-a0f3a48c0f86?auto=format&fit=crop&w=800&q=80",
+        isActive: true
+    },
+    {
+        title: "The Dark Knight",
+        description: "When the menace known as the Joker wreaks havoc and chaos on Gotham City, Batman must accept one of the greatest psychological and physical tests.",
+        genre: ["Action", "Crime", "Drama"],
+        durationMinutes: 152,
+        rating: "PG-13",
+        posterUrl: "https://images.unsplash.com/photo-1509281373149-e957c6296406?auto=format&fit=crop&w=800&q=80",
+        isActive: true
+    },
+    {
+        title: "Inception",
+        description: "A thief who steals corporate secrets through the use of dream-sharing technology is given the inverse task of planting an idea into the mind of a CEO.",
+        genre: ["Action", "Sci-Fi", "Thriller"],
+        durationMinutes: 148,
+        rating: "PG-13",
+        posterUrl: "https://images.unsplash.com/photo-1478760329108-5c3ed9d495a0?auto=format&fit=crop&w=800&q=80",
+        isActive: true
+    },
+    {
+        title: "Oppenheimer",
+        description: "The story of American scientist J. Robert Oppenheimer and his role in the development of the atomic bomb during World War II.",
+        genre: ["Biography", "Drama", "History"],
+        durationMinutes: 180,
+        rating: "R",
+        posterUrl: "https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?auto=format&fit=crop&w=800&q=80",
+        isActive: true
+    },
+    {
+        title: "Dune: Part Two",
+        description: "Paul Atreides unites with Chani and the Fremen while seeking revenge against the conspirators who destroyed his family.",
+        genre: ["Action", "Adventure", "Sci-Fi"],
+        durationMinutes: 166,
+        rating: "PG-13",
+        posterUrl: "https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&w=800&q=80",
+        isActive: true
+    },
+    {
+        title: "Spider-Man: Across the Spider-Verse",
+        description: "Miles Morales catapults across the Multiverse, where he encounters a team of Spider-People charged with protecting its very existence.",
+        genre: ["Animation", "Action", "Adventure"],
+        durationMinutes: 140,
+        rating: "PG",
+        posterUrl: "https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?auto=format&fit=crop&w=800&q=80",
+        isActive: true
+    },
+    {
+        title: "Gladiator II",
+        description: "Decades after Maximus's sacrifice, Lucius enters the Colosseum after his home is conquered by the tyrannical emperors of Rome.",
+        genre: ["Action", "Adventure", "Drama"],
+        durationMinutes: 150,
+        rating: "R",
+        posterUrl: "https://images.unsplash.com/photo-1533613220915-609f661a6fe1?auto=format&fit=crop&w=800&q=80",
+        isActive: true
+    },
+    {
+        title: "Avatar: The Way of Water",
+        description: "Jake Sully lives with his newfound family formed on the extrasolar moon Pandora. Once a familiar threat returns, he must fight a difficult war.",
+        genre: ["Action", "Adventure", "Fantasy"],
+        durationMinutes: 192,
+        rating: "PG-13",
+        posterUrl: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=800&q=80",
+        isActive: true
+    },
+    {
+        title: "Blade Runner 2049",
+        description: "Young Blade Runner K's discovery of a long-buried secret leads him to track down former Blade Runner Rick Deckard, who's been missing thirty years.",
+        genre: ["Action", "Drama", "Mystery"],
+        durationMinutes: 164,
+        rating: "R",
+        posterUrl: "https://images.unsplash.com/photo-1518709766631-a6a7f45921c3?auto=format&fit=crop&w=800&q=80",
+        isActive: true
+    },
+    {
+        title: "Top Gun: Maverick",
+        description: "After thirty years, Maverick is still pushing the envelope as a top naval aviator, but must confront ghosts of his past training elite pilots.",
+        genre: ["Action", "Drama"],
+        durationMinutes: 130,
+        rating: "PG-13",
+        posterUrl: "https://images.unsplash.com/photo-1519074069444-1ba4ea16e6f4?auto=format&fit=crop&w=800&q=80",
+        isActive: true
+    },
+    {
+        title: "Kalki 2898 AD",
+        description: "A modern-day avatar of Vishnu descends to earth to protect the world from evil forces in a desolate, dystopian future.",
+        genre: ["Action", "Sci-Fi"],
+        durationMinutes: 181,
+        rating: "PG-13",
+        posterUrl: "https://images.unsplash.com/photo-1578632767115-351597cf2477?auto=format&fit=crop&w=800&q=80",
+        isActive: true
+    },
+    {
+        title: "Jawan",
+        description: "A high-octane action thriller outlining the emotional journey of a man set out to rectify the wrongs in the society with a personal score.",
+        genre: ["Action", "Thriller"],
+        durationMinutes: 169,
+        rating: "PG-13",
+        posterUrl: "https://images.unsplash.com/photo-1536440136628-849c177e76a1?auto=format&fit=crop&w=800&q=80",
+        isActive: true
+    },
+    {
+        title: "RRR",
+        description: "A fearless revolutionary and an officer in the British force decide to join forces to chart out an inspiring path of freedom.",
+        genre: ["Action", "Drama"],
+        durationMinutes: 187,
+        rating: "PG-13",
+        posterUrl: "https://images.unsplash.com/photo-1518173946687-a4c8a383392e?auto=format&fit=crop&w=800&q=80",
+        isActive: true
+    },
+    {
+        title: "Parasite",
+        description: "Greed and class discrimination threaten the newly formed symbiotic relationship between the wealthy Park family and the destitute Kim clan.",
+        genre: ["Drama", "Thriller"],
+        durationMinutes: 132,
+        rating: "R",
+        posterUrl: "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=800&q=80",
+        isActive: true
+    },
+    {
+        title: "Avengers: Endgame",
+        description: "After the devastating events of Infinity War, the universe is in ruins. With the help of remaining allies, the Avengers assemble once more.",
+        genre: ["Action", "Adventure", "Sci-Fi"],
+        durationMinutes: 181,
+        rating: "PG-13",
+        posterUrl: "https://images.unsplash.com/photo-1563089145-599997674d42?auto=format&fit=crop&w=800&q=80",
+        isActive: true
+    },
+    {
+        title: "The Batman",
+        description: "When a sadistic serial killer begins murdering key political figures in Gotham, Batman is forced to investigate the city's hidden corruption.",
+        genre: ["Action", "Crime", "Drama"],
+        durationMinutes: 176,
+        rating: "PG-13",
+        posterUrl: "https://images.unsplash.com/photo-1509198397868-475647b2a1e5?auto=format&fit=crop&w=800&q=80",
+        isActive: true
+    },
+    {
+        title: "Mad Max: Fury Road",
+        description: "In a post-apocalyptic wasteland, a woman rebels against a tyrannical ruler in search for her homeland with the aid of a group of female prisoners.",
+        genre: ["Action", "Adventure", "Sci-Fi"],
+        durationMinutes: 120,
+        rating: "R",
+        posterUrl: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=800&q=80",
+        isActive: true
+    },
+    {
+        title: "Whiplash",
+        description: "A promising young drummer enrolls at a cut-throat music conservatory where his dreams of greatness are mentored by an instructor who stops at nothing.",
+        genre: ["Drama", "Music"],
+        durationMinutes: 107,
+        rating: "R",
+        posterUrl: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=800&q=80",
+        isActive: true
+    },
+    {
+        title: "Spider-Man: No Way Home",
+        description: "With Spider-Man's identity now revealed, Peter asks Doctor Strange for help. When a spell goes wrong, dangerous foes from other worlds appear.",
+        genre: ["Action", "Adventure", "Fantasy"],
+        durationMinutes: 148,
+        rating: "PG-13",
+        posterUrl: "https://images.unsplash.com/photo-1635805737707-575885ab0820?auto=format&fit=crop&w=800&q=80",
+        isActive: true
+    },
+    {
+        title: "Everything Everywhere All at Once",
+        description: "A middle-aged Chinese immigrant is swept up into an insane adventure in which she alone can save existence by exploring other universes.",
+        genre: ["Action", "Adventure", "Comedy"],
+        durationMinutes: 139,
+        rating: "R",
+        posterUrl: "https://images.unsplash.com/photo-1514306191717-452ec28c7814?auto=format&fit=crop&w=800&q=80",
+        isActive: true
+    }
+]
+
+const theatresData = [
+    {
+        name: "Raj Mandir Cinema",
+        city: "Jaipur",
+        address: "Bhagwan Das Road, Ashok Nagar, Jaipur, Rajasthan 302001",
+        screens: [{ screenNumber: 1, totalSeats: 60 }],
+        isActive: true
+    },
+    {
+        name: "INOX Crystal Palm",
+        city: "Jaipur",
+        address: "Sardar Patel Marg, C Scheme, Ashok Nagar, Jaipur, Rajasthan 302001",
+        screens: [{ screenNumber: 1, totalSeats: 50 }, { screenNumber: 2, totalSeats: 50 }],
+        isActive: true
+    },
+    {
+        name: "Cinepolis World Trade Park",
+        city: "Jaipur",
+        address: "Jawahar Lal Nehru Marg, D-Block, Malviya Nagar, Jaipur, Rajasthan 302017",
+        screens: [{ screenNumber: 1, totalSeats: 60 }, { screenNumber: 2, totalSeats: 60 }],
+        isActive: true
+    },
+    {
+        name: "Entertainment Paradise (EP)",
+        city: "Jaipur",
+        address: "Jawahar Circle, Malviya Nagar, Jaipur, Rajasthan 302017",
+        screens: [{ screenNumber: 1, totalSeats: 50 }],
+        isActive: true
+    }
+]
+
+const generateSeats = (totalSeats) => {
+    return Array.from({ length: totalSeats }, (_, idx) => ({
+        seatNumber: `${String.fromCharCode(65 + Math.floor(idx / 10))}${(idx % 10) + 1}`,
+        status: "available",
+        lockedBy: null,
+        lockedUntil: null
+    }))
+}
+
+const seedDatabase = async () => {
+    try {
+        if (!MONGO_URI) {
+            throw new Error("MongoDB connection URL is missing in config/environment")
+        }
+
+        await mongoose.connect(MONGO_URI)
+
+        await Promise.all([
+            Movie.deleteMany({ genre: { $nin: ["Standup Comedy", "Live Show", "Music Concert", "Theatre Play"] } }),
+            Theatre.deleteMany({ name: { $in: theatresData.map(t => t.name) } })
+        ])
+
+        let adminOwner = await User.findOne({ email: "admin.jaipur@cineverl.com" })
+        if (!adminOwner) {
+            const hashedPassword = await bcrypt.hash("AdminPassword123!", 10)
+            adminOwner = await User.create({
+                name: "Jaipur Theatre Admin",
+                email: "admin.jaipur@cineverl.com",
+                password: hashedPassword,
+                role: "theatre-admin",
+                isVerified: true
+            })
+        }
+
+        const insertedMovies = await Movie.insertMany(moviesData)
+
+        const preparedTheatres = theatresData.map(t => ({
+            ...t,
+            owner: adminOwner._id
+        }))
+        const insertedTheatres = await Theatre.insertMany(preparedTheatres)
+
+        const showtimesToInsert = []
+        const today = new Date()
+
+        for (let i = 0; i < insertedMovies.length; i++) {
+            const movie = insertedMovies[i]
+            const theatre = insertedTheatres[i % insertedTheatres.length]
+            const screen = theatre.screens[0]
+
+            const slots = [
+                { hour: 11, minute: 30, price: 250 },
+                { hour: 15, minute: 45, price: 320 },
+                { hour: 19, minute: 15, price: 400 },
+                { hour: 22, minute: 30, price: 350 }
+            ]
+
+            for (const slot of slots) {
+                const showDate = new Date(today)
+                showDate.setHours(slot.hour, slot.minute, 0, 0)
+                if (showDate < today) {
+                    showDate.setDate(showDate.getDate() + 1)
+                }
+
+                showtimesToInsert.push({
+                    movie: movie._id,
+                    theatre: theatre._id,
+                    screenNumber: screen.screenNumber,
+                    startTime: showDate,
+                    ticketPrice: slot.price,
+                    seats: generateSeats(screen.totalSeats)
+                })
+            }
+        }
+
+        await Showtime.insertMany(showtimesToInsert)
+
+        console.log(`Movie seeding successful! Inserted ${insertedMovies.length} movies, ${insertedTheatres.length} Jaipur theatres, and ${showtimesToInsert.length} showtimes.`)
+        process.exit(0)
+    } catch (error) {
+        console.error("Movie seeding failed:", error)
+        process.exit(1)
+    }
+}
+
+seedDatabase()

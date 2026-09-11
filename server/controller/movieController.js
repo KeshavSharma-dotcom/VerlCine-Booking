@@ -1,12 +1,23 @@
 const Movie = require("../models/Movie")
 const Showtime = require("../models/Showtime")
+const Theatre = require("../models/Theatre")
 
 const createMovie = async (req, res, next) => {
     try {
-        const { title, description, genre, durationMinutes, rating, posterUrl } = req.body
+        const { title, description, genre, durationMinutes, rating, posterUrl, theatreId } = req.body
 
         if (!title || !description || !genre || !durationMinutes) {
             return res.status(400).json({ success: false, message: "Missing required movie details" })
+        }
+
+        if (req.user.role === "theatre-admin") {
+            if (!theatreId) {
+                return res.status(400).json({ success: false, message: "theatreId is required for theatre-admin" })
+            }
+            const theatre = await Theatre.findById(theatreId)
+            if (!theatre || theatre.owner.toString() !== req.user._id.toString()) {
+                return res.status(403).json({ success: false, message: "You can only create movie sessions for your own theatre" })
+            }
         }
 
         const existingMovie = await Movie.findOne({ title: String(title).trim() })
@@ -47,6 +58,12 @@ const getAllMovies = async (req, res, next) => {
             filter.isActive = req.query.active === "true"
         }
 
+        if (req.query.theatreId) {
+            const showtimes = await Showtime.find({ theatre: req.query.theatreId }).select("movie").lean()
+            const movieIds = showtimes.map(st => st.movie)
+            filter._id = { $in: movieIds }
+        }
+
         const [movies, total] = await Promise.all([
             Movie.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit).lean(),
             Movie.countDocuments(filter)
@@ -72,7 +89,7 @@ const getMovieById = async (req, res, next) => {
         const movie = await Movie.findById(req.params.id)
             .populate({
                 path: "showtimes",
-                populate: { path: "theatre", select: "name location" }
+                populate: { path: "theatre", select: "name city address screens owner" }
             })
             .lean()
 
@@ -89,6 +106,15 @@ const getMovieById = async (req, res, next) => {
 const updateMovie = async (req, res, next) => {
     try {
         const { title, description, genre, durationMinutes, rating, posterUrl, isActive } = req.body
+
+        if (req.user.role === "theatre-admin") {
+            const activeShowtimes = await Showtime.find({ movie: req.params.id }).populate("theatre")
+            const ownsAtLeastOne = activeShowtimes.some(st => st.theatre && st.theatre.owner.toString() === req.user._id.toString())
+
+            if (!ownsAtLeastOne) {
+                return res.status(403).json({ success: false, message: "Forbidden. You have no active showtimes for this movie in your theatres" })
+            }
+        }
 
         const updateFields = {}
         if (title !== undefined) updateFields.title = String(title).trim()
@@ -143,6 +169,11 @@ const addShowtime = async (req, res, next) => {
             return res.status(400).json({ success: false, message: "Missing showtime details" })
         }
 
+        const parsedStartTime = new Date(startTime)
+        if (isNaN(parsedStartTime.getTime())) {
+            return res.status(400).json({ success: false, message: "Invalid showtime start format" })
+        }
+
         const movie = await Movie.findById(movieId)
         if (!movie) {
             return res.status(404).json({ success: false, message: "Movie not found" })
@@ -160,7 +191,7 @@ const addShowtime = async (req, res, next) => {
             movie: movieId,
             theatre: theatreId,
             screenNumber: Number(screenNumber),
-            startTime: new Date(startTime),
+            startTime: parsedStartTime,
             ticketPrice: Number(ticketPrice),
             seats: generatedSeats
         })

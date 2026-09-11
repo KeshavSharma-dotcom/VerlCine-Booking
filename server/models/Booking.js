@@ -1,38 +1,40 @@
-const mongoose = require('mongoose')
+const mongoose = require("mongoose")
 
 const bookingSchema = new mongoose.Schema(
     {
         user: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: 'User',
-            required: true,
+            ref: "User",
+            required: [true, "User reference is required"],
             index: true
         },
         showtime: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: 'Showtime',
-            required: true,
+            ref: "Showtime",
+            required: [true, "Showtime reference is required"],
             index: true
         },
-        seatsBooked: [
-            {
-                type: String,
-                required: true
+        seatsBooked: {
+            type: [String],
+            required: [true, "At least one seat must be selected"],
+            validate: {
+                validator: (seats) => Array.isArray(seats) && seats.length > 0,
+                message: "Seats booked cannot be empty"
             }
-        ],
+        },
         totalAmount: {
             type: Number,
-            required: true,
-            min: 0
+            required: [true, "Total amount is required"],
+            min: [0, "Total amount cannot be negative"]
         },
         payment: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: 'Payment',
+            ref: "Payment",
             default: null
         },
         qrCodeData: {
             type: String,
-            required: true
+            default: ""
         },
         reminderSent: {
             type: Boolean,
@@ -40,12 +42,18 @@ const bookingSchema = new mongoose.Schema(
         },
         status: {
             type: String,
-            enum: ['pending', 'confirmed', 'cancelled'],
-            default: 'pending'
+            enum: ["pending", "confirmed", "cancelled"],
+            default: "pending",
+            index: true
         }
     },
     { timestamps: true }
 )
 
-const Booking = mongoose.model('Booking', bookingSchema)
+bookingSchema.index({ user: 1, createdAt: -1 })
+bookingSchema.index({ showtime: 1, status: 1 })
+bookingSchema.index({ reminderSent: 1, status: 1 })
+
+const Booking = mongoose.models.Booking || mongoose.model("Booking", bookingSchema)
+
 module.exports = Booking

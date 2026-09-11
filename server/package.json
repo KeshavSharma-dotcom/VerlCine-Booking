@@ -5,7 +5,10 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "nodemon server.js"
+    "start": "nodemon server.js",
+    "seed:movies": "node seeders/movieSeed.js",
+    "seed:shows": "node seeders/showSeed.js",
+    "seed:all": "node seeders/movieSeed.js && node seeders/showSeed.js"
   },
   "keywords": [],
   "author": "",
