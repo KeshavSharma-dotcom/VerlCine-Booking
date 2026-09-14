@@ -1,0 +1,214 @@
+.vertical-navbar-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    width: 200px;
+    z-index: 50;
+    pointer-events: none;
+    display: flex;
+    flex-direction: column;
+    padding: 1.75rem 1.5rem;
+    box-sizing: border-box;
+}
+
+.vertical-brand-logo-container {
+    pointer-events: auto;
+    display: inline-block;
+    margin-bottom: 2rem;
+    text-decoration: none;
+}
+
+.vertical-brand-logo-img {
+    height: 38px !important;
+    max-height: 38px !important;
+    width: auto !important;
+    max-width: 140px !important;
+    object-fit: contain;
+    filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.6));
+}
+
+.vertical-dialer-wrap {
+    pointer-events: auto;
+    position: relative;
+    height: 320px;
+    width: 100%;
+    overflow: hidden;
+    mask-image: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 1) 25%, rgba(0, 0, 0, 1) 75%, transparent 100%);
+    -webkit-mask-image: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 1) 25%, rgba(0, 0, 0, 1) 75%, transparent 100%);
+}
+
+.vertical-dialer-track {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    animation: infiniteVerticalDialer 14s linear infinite;
+    will-change: transform;
+}
+
+.vertical-dialer-wrap:hover .vertical-dialer-track {
+    animation-play-state: paused;
+}
+
+.vertical-dialer-set {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    padding-bottom: 1.25rem;
+}
+
+.vertical-dialer-btn {
+    background: transparent;
+    border: none;
+    outline: none;
+    text-align: left;
+    color: var(--color-text-muted);
+    font-size: 1.15rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.3rem 0;
+}
+
+.vertical-dialer-btn::before {
+    content: "";
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: transparent;
+    transition: all 0.25s ease;
+}
+
+.vertical-dialer-btn:hover {
+    color: var(--color-text-primary);
+    transform: translateX(6px);
+}
+
+.vertical-dialer-btn.active {
+    color: var(--color-accent-coral);
+    font-size: 1.35rem;
+    transform: translateX(10px);
+    text-shadow: 0 0 16px rgba(255, 107, 0, 0.6);
+}
+
+.vertical-dialer-btn.active::before {
+    background: var(--color-accent-coral);
+    box-shadow: 0 0 8px var(--color-accent-coral);
+    width: 6px;
+    height: 6px;
+}
+
+.top-auth-actions-floating {
+    position: fixed;
+    top: 1.5rem;
+    right: 2rem;
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    background: rgba(18, 24, 41, 0.75);
+    border: 1px solid var(--color-border-subtle);
+    padding: 0.4rem 0.6rem 0.4rem 1rem;
+    border-radius: 9999px;
+    backdrop-filter: blur(12px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+}
+
+.top-auth-username {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--color-text-secondary);
+}
+
+.top-auth-dashboard-btn {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--color-primary-light);
+    text-decoration: none;
+    padding: 0.3rem 0.6rem;
+}
+
+.top-auth-dashboard-btn:hover {
+    color: var(--color-primary);
+}
+
+.top-auth-logout-btn {
+    background: rgba(239, 68, 68, 0.15);
+    border: 1px solid rgba(239, 68, 68, 0.4);
+    color: var(--color-danger);
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 0.35rem 0.85rem;
+    border-radius: 9999px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.top-auth-logout-btn:hover {
+    background: var(--color-danger);
+    color: #ffffff;
+}
+
+.top-auth-login-link {
+    color: var(--color-text-secondary);
+    text-decoration: none;
+    font-size: 0.8rem;
+    font-weight: 700;
+    padding: 0.3rem 0.6rem;
+    transition: color 0.2s;
+}
+
+.top-auth-login-link:hover {
+    color: var(--color-text-primary);
+}
+
+.top-auth-register-btn {
+    background: var(--color-accent-gradient);
+    color: #ffffff;
+    text-decoration: none;
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 0.4rem 0.95rem;
+    border-radius: 9999px;
+    box-shadow: 0 4px 12px rgba(255, 107, 0, 0.35);
+    transition: opacity 0.2s;
+}
+
+.top-auth-register-btn:hover {
+    opacity: 0.92;
+}
+
+@keyframes infiniteVerticalDialer {
+    0% {
+        transform: translateY(0);
+    }
+
+    100% {
+        transform: translateY(-50%);
+    }
+}
+
+@media (max-width: 900px) {
+    .vertical-navbar-container {
+        position: absolute;
+        height: auto;
+        width: 100%;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem;
+    }
+
+    .vertical-dialer-wrap {
+        display: none;
+    }
+
+    .top-auth-actions-floating {
+        position: static;
+    }
+}

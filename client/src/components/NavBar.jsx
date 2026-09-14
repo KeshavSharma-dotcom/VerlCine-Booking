@@ -3,6 +3,7 @@ import { Link } from "react-router-dom"
 import { useSelector, useDispatch } from "react-redux"
 import { logoutUserThunk } from "../redux/thunks/authThunks"
 import namedLogo from "../assets/images/namedLogo.png"
+import "../assets/styles/verticalDialer.css"
 
 export const Navbar = ({ activeTab, setActiveTab }) => {
     const dispatch = useDispatch()
@@ -12,61 +13,91 @@ export const Navbar = ({ activeTab, setActiveTab }) => {
         dispatch(logoutUserThunk())
     }
 
-    return (
-        <header className="home-navbar">
-            <div className="home-nav-left">
-                <Link to="/" className="home-brand-logo-container">
-                    <img src={namedLogo} alt="CineVerl Logo" className="home-brand-logo-img" />
-                </Link>
-                {setActiveTab && (
-                    <nav className="home-nav-links">
-                        <button
-                            onClick={() => setActiveTab("all")}
-                            className={`home-nav-link ${activeTab === "all" ? "active" : ""}`}
-                        >
-                            All
-                        </button>
-                        <button
-                            onClick={() => setActiveTab("movies")}
-                            className={`home-nav-link ${activeTab === "movies" ? "active" : ""}`}
-                        >
-                            Movies
-                        </button>
-                        <button
-                            onClick={() => setActiveTab("shows")}
-                            className={`home-nav-link ${activeTab === "shows" ? "active" : ""}`}
-                        >
-                            Live Shows
-                        </button>
-                    </nav>
-                )}
-            </div>
+    const navItems = [
+        { id: "all", label: "Home" },
+        { id: "movies", label: "Movies" },
+        { id: "shows", label: "Shows" }
+    ]
 
-            <div className="home-nav-actions">
+    const handleWheelScroll = (e) => {
+        if (!setActiveTab) return
+        const keys = ["all", "movies", "shows"]
+        const currentIndex = keys.indexOf(activeTab)
+        if (e.deltaY > 0) {
+            const nextIndex = (currentIndex + 1) % keys.length
+            setActiveTab(keys[nextIndex])
+        } else if (e.deltaY < 0) {
+            const prevIndex = (currentIndex - 1 + keys.length) % keys.length
+            setActiveTab(keys[prevIndex])
+        }
+    }
+
+    return (
+        <>
+            <aside className="vertical-navbar-container">
+                <Link to="/" className="vertical-brand-logo-container">
+                    <img
+                        src={namedLogo}
+                        alt="CineVerl Logo"
+                        className="vertical-brand-logo-img"
+                    />
+                </Link>
+
+                {setActiveTab && (
+                    <div className="vertical-dialer-wrap" onWheel={handleWheelScroll}>
+                        <div className="vertical-dialer-track">
+                            <div className="vertical-dialer-set">
+                                {navItems.map((item) => (
+                                    <button
+                                        key={`set1-${item.id}`}
+                                        onClick={() => setActiveTab(item.id)}
+                                        className={`vertical-dialer-btn ${activeTab === item.id ? "active" : ""}`}
+                                    >
+                                        {item.label}
+                                    </button>
+                                ))}
+                            </div>
+                            <div className="vertical-dialer-set">
+                                {navItems.map((item) => (
+                                    <button
+                                        key={`set2-${item.id}`}
+                                        onClick={() => setActiveTab(item.id)}
+                                        className={`vertical-dialer-btn ${activeTab === item.id ? "active" : ""}`}
+                                    >
+                                        {item.label}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                )}
+            </aside>
+
+            <div className="top-auth-actions-floating">
                 {isAuthenticated ? (
-                    <div className="home-nav-user-group">
-                        <span className="home-nav-username">Hi, {user?.name?.split(" ")[0]}</span>
+                    <>
+                        <span className="top-auth-username">Hi, {user?.name?.split(" ")[0]}</span>
                         {(user?.role === "admin" || user?.role === "theatre-admin") && (
-                            <Link to="/admin/dashboard" className="home-nav-dashboard-link">
+                            <Link to="/admin/dashboard" className="top-auth-dashboard-btn">
                                 Dashboard
                             </Link>
                         )}
-                        <button onClick={handleLogout} className="home-nav-logout-btn">
+                        <button onClick={handleLogout} className="top-auth-logout-btn">
                             Logout
                         </button>
-                    </div>
+                    </>
                 ) : (
                     <>
-                        <Link to="/login" className="home-nav-login">
+                        <Link to="/login" className="top-auth-login-link">
                             Login
                         </Link>
-                        <Link to="/register" className="home-nav-register">
+                        <Link to="/register" className="top-auth-register-btn">
                             Get Started
                         </Link>
                     </>
                 )}
             </div>
-        </header>
+        </>
     )
 }
 

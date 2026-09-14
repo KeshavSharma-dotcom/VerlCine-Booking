@@ -1,0 +1,117 @@
+.animated-bg-viewport {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    z-index: 0;
+    pointer-events: none;
+    background-color: var(--color-bg-primary);
+}
+
+.animated-quad-canvas {
+    position: absolute;
+    top: -25vh;
+    left: -25vw;
+    width: 150vw;
+    height: 150vh;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    gap: 1.5rem;
+    animation: quadBoxPan 45s ease-in-out infinite alternate;
+    will-change: transform;
+}
+
+.animated-quad-tile {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    border-radius: 20px;
+    background-color: var(--color-bg-elevated);
+}
+
+.animated-quad-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: saturate(1.8) contrast(1.15) brightness(0.42);
+    transform: scale(1.08);
+}
+
+.animated-bg-overlay {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at center, rgba(10, 15, 29, 0.45) 0%, rgba(10, 15, 29, 0.85) 75%, var(--color-bg-primary) 100%),
+        linear-gradient(180deg, rgba(10, 15, 29, 0.3) 0%, rgba(10, 15, 29, 0.95) 100%);
+    backdrop-filter: blur(8px);
+}
+
+.detail-animated-bg-viewport {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    z-index: 0;
+    pointer-events: none;
+    background-color: var(--color-bg-primary);
+}
+
+.detail-animated-pan {
+    position: absolute;
+    top: -20vh;
+    left: -35vw;
+    width: 170vw;
+    height: 140vh;
+    background-size: cover;
+    background-position: center;
+    filter: saturate(1.9) contrast(1.2) brightness(0.45);
+    animation: detailPanSquare 40s ease-in-out infinite alternate;
+    will-change: transform;
+}
+
+.detail-animated-overlay {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 60% 40%, rgba(10, 15, 29, 0.3) 0%, rgba(10, 15, 29, 0.85) 70%, var(--color-bg-primary) 100%),
+        linear-gradient(90deg, rgba(10, 15, 29, 0.95) 0%, rgba(10, 15, 29, 0.7) 50%, rgba(10, 15, 29, 0.92) 100%);
+    backdrop-filter: blur(10px);
+}
+
+@keyframes quadBoxPan {
+    0% {
+        transform: translate(-6%, 0) scale(1.02);
+    }
+
+    33% {
+        transform: translate(6%, 0) scale(1.06);
+    }
+
+    66% {
+        transform: translate(6%, 6%) scale(1.04);
+    }
+
+    100% {
+        transform: translate(-6%, 6%) scale(1.02);
+    }
+}
+
+@keyframes detailPanSquare {
+    0% {
+        transform: translate(-8%, 0) scale(1.03);
+    }
+
+    33% {
+        transform: translate(8%, 0) scale(1.07);
+    }
+
+    66% {
+        transform: translate(8%, 8%) scale(1.05);
+    }
+
+    100% {
+        transform: translate(-8%, 8%) scale(1.03);
+    }
+}

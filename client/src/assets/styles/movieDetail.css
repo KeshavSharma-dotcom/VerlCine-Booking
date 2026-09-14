@@ -1,0 +1,262 @@
+.movie-detail-container {
+    position: relative;
+    min-height: 100vh;
+    background-color: var(--color-bg-primary);
+    color: var(--color-text-primary);
+    display: flex;
+    flex-direction: column;
+}
+
+.movie-detail-backdrop {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    min-height: 480px;
+    background-size: cover;
+    background-position: center;
+    display: flex;
+    align-items: flex-end;
+    padding: 3rem 2rem;
+    box-sizing: border-box;
+}
+
+.movie-detail-backdrop-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(10, 15, 29, 0.3) 0%, rgba(10, 15, 29, 0.92) 80%, var(--color-bg-primary) 100%);
+    backdrop-filter: blur(4px);
+}
+
+.movie-detail-hero-content {
+    position: relative;
+    z-index: 10;
+    max-width: 1200px;
+    margin: 0 auto;
+    width: 100%;
+    display: flex;
+    gap: 2.5rem;
+    align-items: flex-end;
+}
+
+.movie-detail-poster-wrap {
+    width: 260px;
+    flex-shrink: 0;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid var(--color-border-subtle);
+    box-shadow: 0 20px 45px rgba(0, 0, 0, 0.8);
+    aspect-ratio: 2 / 3;
+    background-color: var(--color-bg-elevated);
+}
+
+.movie-detail-poster {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: saturate(1.4) contrast(1.1);
+}
+
+.movie-detail-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.movie-detail-badge-group {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.movie-detail-rating-pill {
+    background-color: var(--color-accent-coral);
+    color: #ffffff;
+    font-size: 0.75rem;
+    font-weight: 800;
+    padding: 0.25rem 0.6rem;
+    border-radius: 6px;
+    letter-spacing: 0.05em;
+    box-shadow: 0 0 10px rgba(255, 107, 0, 0.4);
+}
+
+.movie-detail-duration {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--color-text-secondary);
+}
+
+.movie-detail-title {
+    font-size: clamp(2rem, 4vw, 3rem);
+    font-weight: 900;
+    line-height: 1.1;
+    margin: 0;
+    text-shadow: 0 2px 12px rgba(0, 0, 0, 0.7);
+}
+
+.movie-detail-genre-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.movie-detail-genre-tag {
+    background: rgba(18, 24, 41, 0.85);
+    border: 1px solid var(--color-border-subtle);
+    color: var(--color-primary-light);
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 0.3rem 0.75rem;
+    border-radius: 9999px;
+    backdrop-filter: blur(8px);
+}
+
+.movie-detail-description {
+    font-size: 1rem;
+    line-height: 1.6;
+    color: var(--color-text-secondary);
+    max-width: 750px;
+    margin: 0.5rem 0 0 0;
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
+}
+
+.movie-detail-body {
+    position: relative;
+    z-index: 1;
+    max-width: 1200px;
+    margin: 0 auto;
+    width: 100%;
+    padding: 3rem 2rem 6rem;
+    box-sizing: border-box;
+}
+
+.movie-detail-section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 2rem;
+    border-bottom: 1px solid var(--color-border-subtle);
+    padding-bottom: 1rem;
+}
+
+.movie-detail-section-title {
+    font-size: 1.5rem;
+    font-weight: 800;
+    margin: 0;
+}
+
+.movie-detail-theatres-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.movie-detail-theatre-card {
+    background: rgba(18, 24, 41, 0.85);
+    border: 1px solid var(--color-border-subtle);
+    border-radius: 12px;
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    backdrop-filter: blur(12px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+}
+
+.movie-detail-theatre-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.movie-detail-theatre-name {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    margin: 0 0 0.25rem 0;
+}
+
+.movie-detail-theatre-address {
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
+    margin: 0;
+}
+
+.movie-detail-slots-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.movie-detail-slot-btn {
+    background: var(--color-bg-elevated);
+    border: 1px solid var(--color-border-subtle);
+    border-radius: 8px;
+    padding: 0.6rem 1rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+    text-decoration: none;
+    color: var(--color-text-primary);
+    transition: all 0.2s ease;
+    min-width: 95px;
+}
+
+.movie-detail-slot-btn:hover {
+    border-color: var(--color-accent-coral);
+    background: var(--color-bg-surface);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(255, 107, 0, 0.3);
+}
+
+.movie-detail-slot-time {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--color-text-primary);
+}
+
+.movie-detail-slot-price {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--color-accent-coral);
+}
+
+.movie-detail-slot-screen {
+    font-size: 0.65rem;
+    color: var(--color-text-muted);
+}
+
+.movie-detail-empty-slots {
+    background: rgba(18, 24, 41, 0.85);
+    border: 1px dashed var(--color-border-subtle);
+    border-radius: 12px;
+    padding: 3rem 1.5rem;
+    text-align: center;
+    color: var(--color-text-muted);
+    backdrop-filter: blur(8px);
+}
+
+@media (max-width: 768px) {
+    .movie-detail-backdrop {
+        padding: 2rem 1rem;
+        min-height: auto;
+    }
+
+    .movie-detail-hero-content {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+
+    .movie-detail-badge-group,
+    .movie-detail-genre-list {
+        justify-content: center;
+    }
+
+    .movie-detail-body {
+        padding: 2rem 1rem 4rem;
+    }
+}

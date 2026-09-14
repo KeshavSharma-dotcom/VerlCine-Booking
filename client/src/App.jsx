@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-d
 import { useDispatch, useSelector } from "react-redux"
 import { checkAuthThunk } from "./redux/thunks/authThunks"
 import Home from "./pages/Home"
+import MovieDetail from "./pages/MovieDetail"
 import Login from "./pages/auth/Login"
 import Register from "./pages/auth/Register"
 import ProtectedRoute from "./routes/ProtectedRoute"
@@ -28,6 +29,7 @@ export default function App() {
     <Router>
       <Routes>
         <Route path="/" element={<Home />} />
+        <Route path="/movie/:id" element={<MovieDetail />} />
 
         <Route element={<GuestRoute />}>
           <Route path="/login" element={<Login />} />
@@ -35,7 +37,7 @@ export default function App() {
         </Route>
 
         <Route element={<ProtectedRoute />}>
-          <Route path="/movie/:id" element={<Home />} />
+          <Route path="/booking/:showtimeId" element={<MovieDetail />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/" replace />} />
