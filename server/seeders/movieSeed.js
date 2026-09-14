@@ -16,7 +16,7 @@ const moviesData = [
         genre: ["Sci-Fi", "Adventure", "Drama"],
         durationMinutes: 169,
         rating: "PG-13",
-        posterUrl: "https://images.unsplash.com/photo-1506703719100-a0f3a48c0f86?auto=format&fit=crop&w=800&q=80",
+        posterUrl: "https://image.tmdb.org/t/p/w780/gEU2QniE6E77NI6lCU6MxlNBvIx.jpg",
         isActive: true
     },
     {
@@ -25,7 +25,7 @@ const moviesData = [
         genre: ["Action", "Crime", "Drama"],
         durationMinutes: 152,
         rating: "PG-13",
-        posterUrl: "https://images.unsplash.com/photo-1509281373149-e957c6296406?auto=format&fit=crop&w=800&q=80",
+        posterUrl: "https://image.tmdb.org/t/p/w780/qJ2tW6WMUDux911r6m7haRef0WH.jpg",
         isActive: true
     },
     {
@@ -34,7 +34,7 @@ const moviesData = [
         genre: ["Action", "Sci-Fi", "Thriller"],
         durationMinutes: 148,
         rating: "PG-13",
-        posterUrl: "https://images.unsplash.com/photo-1478760329108-5c3ed9d495a0?auto=format&fit=crop&w=800&q=80",
+        posterUrl: "https://image.tmdb.org/t/p/w780/oYuLEt3zVCKq57qu2F8dT7NIa6f.jpg",
         isActive: true
     },
     {
@@ -43,7 +43,7 @@ const moviesData = [
         genre: ["Biography", "Drama", "History"],
         durationMinutes: 180,
         rating: "R",
-        posterUrl: "https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?auto=format&fit=crop&w=800&q=80",
+        posterUrl: "https://image.tmdb.org/t/p/w780/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg",
         isActive: true
     },
     {
@@ -52,7 +52,7 @@ const moviesData = [
         genre: ["Action", "Adventure", "Sci-Fi"],
         durationMinutes: 166,
         rating: "PG-13",
-        posterUrl: "https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&w=800&q=80",
+        posterUrl: "https://image.tmdb.org/t/p/w780/1pdfLvkbY9ohJlCjQH2CZjjYVvJ.jpg",
         isActive: true
     },
     {
@@ -61,7 +61,7 @@ const moviesData = [
         genre: ["Animation", "Action", "Adventure"],
         durationMinutes: 140,
         rating: "PG",
-        posterUrl: "https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?auto=format&fit=crop&w=800&q=80",
+        posterUrl: "https://image.tmdb.org/t/p/w780/8Vt6mWEReuy4Of61Lnj5Xj704m8.jpg",
         isActive: true
     },
     {
@@ -70,7 +70,7 @@ const moviesData = [
         genre: ["Action", "Adventure", "Drama"],
         durationMinutes: 150,
         rating: "R",
-        posterUrl: "https://images.unsplash.com/photo-1533613220915-609f661a6fe1?auto=format&fit=crop&w=800&q=80",
+        posterUrl: "https://image.tmdb.org/t/p/w780/2cxhvwyEwRlysAmRH4iodkvo0z5.jpg",
         isActive: true
     },
     {
@@ -79,7 +79,7 @@ const moviesData = [
         genre: ["Action", "Adventure", "Fantasy"],
         durationMinutes: 192,
         rating: "PG-13",
-        posterUrl: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=800&q=80",
+        posterUrl: "https://image.tmdb.org/t/p/w780/t6HIqrRAclMCA60NsSmeqe9RmNV.jpg",
         isActive: true
     },
     {
@@ -88,7 +88,7 @@ const moviesData = [
         genre: ["Action", "Drama", "Mystery"],
         durationMinutes: 164,
         rating: "R",
-        posterUrl: "https://images.unsplash.com/photo-1518709766631-a6a7f45921c3?auto=format&fit=crop&w=800&q=80",
+        posterUrl: "https://image.tmdb.org/t/p/w780/gajva2L0rPYkEWjzgFlBXCAVBE5.jpg",
         isActive: true
     },
     {
@@ -97,7 +97,7 @@ const moviesData = [
         genre: ["Action", "Drama"],
         durationMinutes: 130,
         rating: "PG-13",
-        posterUrl: "https://images.unsplash.com/photo-1519074069444-1ba4ea16e6f4?auto=format&fit=crop&w=800&q=80",
+        posterUrl: "https://image.tmdb.org/t/p/w780/62HCnUTziyWcpDaBO2i1DX17ljH.jpg",
         isActive: true
     },
     {
@@ -106,7 +106,7 @@ const moviesData = [
         genre: ["Action", "Sci-Fi"],
         durationMinutes: 181,
         rating: "PG-13",
-        posterUrl: "https://images.unsplash.com/photo-1578632767115-351597cf2477?auto=format&fit=crop&w=800&q=80",
+        posterUrl: "https://image.tmdb.org/t/p/w780/9Pt8v4zN48tCj9x2kF8a2t59Gq1.jpg",
         isActive: true
     },
     {
@@ -115,7 +115,7 @@ const moviesData = [
         genre: ["Action", "Thriller"],
         durationMinutes: 169,
         rating: "PG-13",
-        posterUrl: "https://images.unsplash.com/photo-1536440136628-849c177e76a1?auto=format&fit=crop&w=800&q=80",
+        posterUrl: "https://image.tmdb.org/t/p/w780/jFt1g94utjjrUCSpFfWtzsmEL7V.jpg",
         isActive: true
     },
     {
@@ -124,7 +124,7 @@ const moviesData = [
         genre: ["Action", "Drama"],
         durationMinutes: 187,
         rating: "PG-13",
-        posterUrl: "https://images.unsplash.com/photo-1518173946687-a4c8a383392e?auto=format&fit=crop&w=800&q=80",
+        posterUrl: "https://image.tmdb.org/t/p/w780/nEufeZlyAOLqO2brrs0yeMu1QXO.jpg",
         isActive: true
     },
     {
@@ -133,7 +133,7 @@ const moviesData = [
         genre: ["Drama", "Thriller"],
         durationMinutes: 132,
         rating: "R",
-        posterUrl: "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=800&q=80",
+        posterUrl: "https://image.tmdb.org/t/p/w780/7IiTTgloJzvGI1TAYymCfbfl3vT.jpg",
         isActive: true
     },
     {
@@ -142,7 +142,7 @@ const moviesData = [
         genre: ["Action", "Adventure", "Sci-Fi"],
         durationMinutes: 181,
         rating: "PG-13",
-        posterUrl: "https://images.unsplash.com/photo-1563089145-599997674d42?auto=format&fit=crop&w=800&q=80",
+        posterUrl: "https://image.tmdb.org/t/p/w780/or06FN3Dka5tukK1e9sl16pB3iy.jpg",
         isActive: true
     },
     {
@@ -151,7 +151,7 @@ const moviesData = [
         genre: ["Action", "Crime", "Drama"],
         durationMinutes: 176,
         rating: "PG-13",
-        posterUrl: "https://images.unsplash.com/photo-1509198397868-475647b2a1e5?auto=format&fit=crop&w=800&q=80",
+        posterUrl: "https://image.tmdb.org/t/p/w780/74xTEgt7R36Fpooo50r9T25onhq.jpg",
         isActive: true
     },
     {
@@ -160,7 +160,7 @@ const moviesData = [
         genre: ["Action", "Adventure", "Sci-Fi"],
         durationMinutes: 120,
         rating: "R",
-        posterUrl: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=800&q=80",
+        posterUrl: "https://image.tmdb.org/t/p/w780/8tZYtuWezp8JbcsvHYO0O46tFbo.jpg",
         isActive: true
     },
     {
@@ -169,7 +169,7 @@ const moviesData = [
         genre: ["Drama", "Music"],
         durationMinutes: 107,
         rating: "R",
-        posterUrl: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=800&q=80",
+        posterUrl: "https://image.tmdb.org/t/p/w780/7fn624j5lj3xTme2SgiLCeuedmO.jpg",
         isActive: true
     },
     {
@@ -178,7 +178,7 @@ const moviesData = [
         genre: ["Action", "Adventure", "Fantasy"],
         durationMinutes: 148,
         rating: "PG-13",
-        posterUrl: "https://images.unsplash.com/photo-1635805737707-575885ab0820?auto=format&fit=crop&w=800&q=80",
+        posterUrl: "https://image.tmdb.org/t/p/w780/1g0dhYtq4irTY1GPXvft6k4YLjm.jpg",
         isActive: true
     },
     {
@@ -187,7 +187,7 @@ const moviesData = [
         genre: ["Action", "Adventure", "Comedy"],
         durationMinutes: 139,
         rating: "R",
-        posterUrl: "https://images.unsplash.com/photo-1514306191717-452ec28c7814?auto=format&fit=crop&w=800&q=80",
+        posterUrl: "https://image.tmdb.org/t/p/w780/w3LxiVYPqrlexP02LOVup9bAcgx.jpg",
         isActive: true
     }
 ]
@@ -257,13 +257,13 @@ const seedDatabase = async () => {
             })
         }
 
-        const insertedMovies = await Movie.insertMany(moviesData)
-
         const preparedTheatres = theatresData.map(t => ({
             ...t,
             owner: adminOwner._id
         }))
         const insertedTheatres = await Theatre.insertMany(preparedTheatres)
+
+        const insertedMovies = await Movie.insertMany(moviesData)
 
         const showtimesToInsert = []
         const today = new Date()
