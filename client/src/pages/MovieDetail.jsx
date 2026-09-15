@@ -2,8 +2,7 @@ import React, { useEffect, useMemo } from "react"
 import { useParams, Link, useNavigate } from "react-router-dom"
 import { useSelector, useDispatch } from "react-redux"
 import { fetchMovieById } from "../redux/thunks/movieThunks"
-import { clearSelectedMovie } from "../redux/slices/movieSlice"
-import Navbar from "../components/NavBar"
+import { clearSelectedMovie } from "../features/movies/movieSlice"
 import "../assets/styles/animatedBg.css"
 import "../assets/styles/movieDetail.css"
 
@@ -53,7 +52,6 @@ export const MovieDetail = () => {
     if (loading) {
         return (
             <div className="movie-detail-container">
-                <Navbar />
                 <div className="home-loading-state" style={{ margin: "auto" }}>
                     <div className="home-spinner"></div>
                     <p>Loading session information...</p>
@@ -65,7 +63,6 @@ export const MovieDetail = () => {
     if (error || !selectedMovie) {
         return (
             <div className="movie-detail-container">
-                <Navbar />
                 <div className="home-error-state" style={{ margin: "auto" }}>
                     <p>{error || "Title details could not be retrieved"}</p>
                     <button
@@ -89,8 +86,6 @@ export const MovieDetail = () => {
                 />
                 <div className="detail-animated-overlay" />
             </div>
-
-            <Navbar />
 
             <div className="movie-detail-backdrop">
                 <div className="movie-detail-backdrop-overlay"></div>

@@ -2,8 +2,10 @@ import { useEffect } from "react"
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom"
 import { useDispatch, useSelector } from "react-redux"
 import { checkAuthThunk } from "./redux/thunks/authThunks"
+import Navbar from "./components/NavBar"
 import Home from "./pages/Home"
 import MovieDetail from "./pages/MovieDetail"
+import SeatBooking from "./pages/SeatBooking"
 import Login from "./pages/auth/Login"
 import Register from "./pages/auth/Register"
 import ProtectedRoute from "./routes/ProtectedRoute"
@@ -27,6 +29,7 @@ export default function App() {
 
   return (
     <Router>
+      <Navbar />
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/movie/:id" element={<MovieDetail />} />
@@ -37,7 +40,7 @@ export default function App() {
         </Route>
 
         <Route element={<ProtectedRoute />}>
-          <Route path="/booking/:showtimeId" element={<MovieDetail />} />
+          <Route path="/booking/:showtimeId" element={<SeatBooking />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/" replace />} />

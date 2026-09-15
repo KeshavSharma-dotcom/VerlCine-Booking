@@ -18,6 +18,11 @@ export const fetchMovies = createAsyncThunk(
                 credentials: "include"
             })
 
+            const contentType = response.headers.get("content-type")
+            if (!contentType || !contentType.includes("application/json")) {
+                return rejectWithValue("Invalid API endpoint. Backend returned HTML instead of JSON.")
+            }
+
             const data = await response.json()
 
             if (!response.ok) {
@@ -163,6 +168,53 @@ export const removeShowtime = createAsyncThunk(
             }
 
             return showtimeId
+        } catch (error) {
+            return rejectWithValue(error.message || "Network error")
+        }
+    }
+)
+
+export const fetchShowtimeDetails = createAsyncThunk(
+    "movies/fetchShowtimeDetails",
+    async (showtimeId, { rejectWithValue }) => {
+        try {
+            const response = await fetch(`/api/showtimes/${showtimeId}`, {
+                method: "GET",
+                headers: { "Content-Type": "application/json" },
+                credentials: "include"
+            })
+
+            const data = await response.json()
+
+            if (!response.ok) {
+                return rejectWithValue(data.message || "Failed to load showtime details")
+            }
+
+            return data.showtime
+        } catch (error) {
+            return rejectWithValue(error.message || "Network error")
+        }
+    }
+)
+
+export const createBooking = createAsyncThunk(
+    "movies/createBooking",
+    async ({ showtimeId, seats, totalPrice }, { rejectWithValue }) => {
+        try {
+            const response = await fetch("/api/bookings", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                credentials: "include",
+                body: JSON.stringify({ showtimeId, seats, totalPrice })
+            })
+
+            const data = await response.json()
+
+            if (!response.ok) {
+                return rejectWithValue(data.message || "Failed to create booking")
+            }
+
+            return data.booking
         } catch (error) {
             return rejectWithValue(error.message || "Network error")
         }
