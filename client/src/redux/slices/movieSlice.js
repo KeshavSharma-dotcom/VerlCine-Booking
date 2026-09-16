@@ -6,12 +6,16 @@ import {
     updateMovie,
     deleteMovie,
     addShowtime,
-    removeShowtime
+    removeShowtime,
+    fetchShowtimeDetails,
+    createBooking
 } from "../thunks/movieThunks"
 
 const initialState = {
     movies: [],
     selectedMovie: null,
+    currentShowtime: null,
+    activeBooking: null,
     pagination: {
         page: 1,
         limit: 10,
@@ -21,16 +25,20 @@ const initialState = {
     filter: {
         genre: "",
         theatreId: "",
-        searchQuery: ""
+        searchQuery: "",
+        city: "Jaipur"
     },
     loading: false,
     actionLoading: false,
+    showtimeLoading: false,
+    bookingLoading: false,
     error: null,
+    bookingError: null,
     successMessage: null
 }
 
 const movieSlice = createSlice({
-    name: "movies",
+    name: "movie",
     initialState,
     reducers: {
         setFilter: (state, action) => {
@@ -40,11 +48,20 @@ const movieSlice = createSlice({
             state.filter = {
                 genre: "",
                 theatreId: "",
-                searchQuery: ""
+                searchQuery: "",
+                city: "Jaipur"
             }
         },
         clearSelectedMovie: (state) => {
             state.selectedMovie = null
+            state.error = null
+        },
+        clearCurrentShowtime: (state) => {
+            state.currentShowtime = null
+        },
+        clearBookingState: (state) => {
+            state.activeBooking = null
+            state.bookingError = null
         },
         clearMovieMessages: (state) => {
             state.error = null
@@ -59,8 +76,10 @@ const movieSlice = createSlice({
             })
             .addCase(fetchMovies.fulfilled, (state, action) => {
                 state.loading = false
-                state.movies = action.payload.movies
-                state.pagination = action.payload.pagination
+                state.movies = action.payload.movies || (Array.isArray(action.payload) ? action.payload : [])
+                if (action.payload.pagination) {
+                    state.pagination = action.payload.pagination
+                }
             })
             .addCase(fetchMovies.rejected, (state, action) => {
                 state.loading = false
@@ -161,6 +180,31 @@ const movieSlice = createSlice({
                 state.actionLoading = false
                 state.error = action.payload
             })
+            .addCase(fetchShowtimeDetails.pending, (state) => {
+                state.showtimeLoading = true
+                state.error = null
+            })
+            .addCase(fetchShowtimeDetails.fulfilled, (state, action) => {
+                state.showtimeLoading = false
+                state.currentShowtime = action.payload
+            })
+            .addCase(fetchShowtimeDetails.rejected, (state, action) => {
+                state.showtimeLoading = false
+                state.error = action.payload
+            })
+            .addCase(createBooking.pending, (state) => {
+                state.bookingLoading = true
+                state.bookingError = null
+            })
+            .addCase(createBooking.fulfilled, (state, action) => {
+                state.bookingLoading = false
+                state.activeBooking = action.payload
+                state.successMessage = "Booking created successfully"
+            })
+            .addCase(createBooking.rejected, (state, action) => {
+                state.bookingLoading = false
+                state.bookingError = action.payload
+            })
     }
 })
 
@@ -168,6 +212,8 @@ export const {
     setFilter,
     clearFilter,
     clearSelectedMovie,
+    clearCurrentShowtime,
+    clearBookingState,
     clearMovieMessages
 } = movieSlice.actions
 

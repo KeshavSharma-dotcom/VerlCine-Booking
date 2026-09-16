@@ -2,7 +2,7 @@ import React, { useEffect, useMemo } from "react"
 import { useParams, Link, useNavigate } from "react-router-dom"
 import { useSelector, useDispatch } from "react-redux"
 import { fetchMovieById } from "../redux/thunks/movieThunks"
-import { clearSelectedMovie } from "../features/movies/movieSlice"
+import { clearSelectedMovie } from "../redux/slices/movieSlice"
 import "../assets/styles/animatedBg.css"
 import "../assets/styles/movieDetail.css"
 

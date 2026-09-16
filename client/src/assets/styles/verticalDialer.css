@@ -15,7 +15,7 @@
 .vertical-brand-logo-container {
     pointer-events: auto;
     display: inline-block;
-    margin-bottom: 2rem;
+    margin-bottom: 3rem;
     text-decoration: none;
 }
 
@@ -25,15 +25,19 @@
     width: auto !important;
     max-width: 140px !important;
     object-fit: contain;
-    filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.6));
+    filter: drop-shadow(0 4px 14px rgba(0, 0, 0, 0.7));
 }
 
 .vertical-dialer-wrap {
     pointer-events: auto;
     position: relative;
-    height: 320px;
+    height: 220px;
     width: 100%;
     overflow: hidden;
+    cursor: ns-resize;
+    user-select: none;
+    overscroll-behavior: contain;
+    touch-action: none;
     mask-image: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 1) 25%, rgba(0, 0, 0, 1) 75%, transparent 100%);
     -webkit-mask-image: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 1) 25%, rgba(0, 0, 0, 1) 75%, transparent 100%);
 }
@@ -41,20 +45,10 @@
 .vertical-dialer-track {
     display: flex;
     flex-direction: column;
-    width: 100%;
-    animation: infiniteVerticalDialer 14s linear infinite;
-    will-change: transform;
-}
-
-.vertical-dialer-wrap:hover .vertical-dialer-track {
-    animation-play-state: paused;
-}
-
-.vertical-dialer-set {
-    display: flex;
-    flex-direction: column;
     gap: 1.25rem;
-    padding-bottom: 1.25rem;
+    width: 100%;
+    transition: transform 0.35s cubic-bezier(0.2, 1, 0.3, 1);
+    will-change: transform;
 }
 
 .vertical-dialer-btn {
@@ -63,7 +57,7 @@
     outline: none;
     text-align: left;
     color: var(--color-text-muted);
-    font-size: 1.15rem;
+    font-size: 1.05rem;
     font-weight: 800;
     text-transform: uppercase;
     letter-spacing: 0.1em;
@@ -72,7 +66,9 @@
     display: flex;
     align-items: center;
     gap: 0.6rem;
-    padding: 0.3rem 0;
+    padding: 0.4rem 0;
+    opacity: 0.45;
+    transform: scale(0.92) translateX(0);
 }
 
 .vertical-dialer-btn::before {
@@ -86,14 +82,16 @@
 
 .vertical-dialer-btn:hover {
     color: var(--color-text-primary);
-    transform: translateX(6px);
+    opacity: 0.8;
+    transform: scale(0.98) translateX(4px);
 }
 
 .vertical-dialer-btn.active {
     color: var(--color-accent-coral);
     font-size: 1.35rem;
-    transform: translateX(10px);
-    text-shadow: 0 0 16px rgba(255, 107, 0, 0.6);
+    opacity: 1;
+    transform: scale(1.05) translateX(8px);
+    text-shadow: 0 0 16px rgba(255, 107, 0, 0.7);
 }
 
 .vertical-dialer-btn.active::before {
@@ -103,112 +101,153 @@
     height: 6px;
 }
 
-.top-auth-actions-floating {
-    position: fixed;
-    top: 1.5rem;
-    right: 2rem;
-    z-index: 50;
+.bottom-left-profile-widget {
+    pointer-events: auto;
+    position: relative;
+    margin-top: auto;
+    width: 100%;
+}
+
+.profile-trigger-card {
     display: flex;
     align-items: center;
     gap: 0.75rem;
-    background: rgba(18, 24, 41, 0.75);
+    padding: 0.5rem 0.65rem;
+    border-radius: 12px;
+    background: rgba(18, 24, 41, 0.7);
     border: 1px solid var(--color-border-subtle);
-    padding: 0.4rem 0.6rem 0.4rem 1rem;
-    border-radius: 9999px;
     backdrop-filter: blur(12px);
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
-}
-
-.top-auth-username {
-    font-size: 0.8rem;
-    font-weight: 700;
-    color: var(--color-text-secondary);
-}
-
-.top-auth-dashboard-btn {
-    font-size: 0.8rem;
-    font-weight: 700;
-    color: var(--color-primary-light);
-    text-decoration: none;
-    padding: 0.3rem 0.6rem;
-}
-
-.top-auth-dashboard-btn:hover {
-    color: var(--color-primary);
-}
-
-.top-auth-logout-btn {
-    background: rgba(239, 68, 68, 0.15);
-    border: 1px solid rgba(239, 68, 68, 0.4);
-    color: var(--color-danger);
-    font-size: 0.75rem;
-    font-weight: 700;
-    padding: 0.35rem 0.85rem;
-    border-radius: 9999px;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.top-auth-logout-btn:hover {
-    background: var(--color-danger);
-    color: #ffffff;
+.bottom-left-profile-widget:hover .profile-trigger-card {
+    border-color: var(--color-primary);
+    background: rgba(27, 36, 59, 0.85);
+    box-shadow: 0 4px 18px var(--color-primary-glow);
 }
 
-.top-auth-login-link {
-    color: var(--color-text-secondary);
-    text-decoration: none;
-    font-size: 0.8rem;
-    font-weight: 700;
-    padding: 0.3rem 0.6rem;
-    transition: color 0.2s;
-}
-
-.top-auth-login-link:hover {
-    color: var(--color-text-primary);
-}
-
-.top-auth-register-btn {
+.profile-avatar-circle {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
     background: var(--color-accent-gradient);
     color: #ffffff;
-    text-decoration: none;
-    font-size: 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 0.95rem;
+    flex-shrink: 0;
+    box-shadow: 0 0 10px rgba(255, 107, 0, 0.4);
+}
+
+.profile-meta-wrap {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.profile-meta-name {
+    font-size: 0.85rem;
     font-weight: 700;
-    padding: 0.4rem 0.95rem;
-    border-radius: 9999px;
-    box-shadow: 0 4px 12px rgba(255, 107, 0, 0.35);
-    transition: opacity 0.2s;
+    color: var(--color-text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
-.top-auth-register-btn:hover {
-    opacity: 0.92;
+.profile-meta-role {
+    font-size: 0.7rem;
+    color: var(--color-text-muted);
+    text-transform: capitalize;
 }
 
-@keyframes infiniteVerticalDialer {
-    0% {
-        transform: translateY(0);
-    }
-
-    100% {
-        transform: translateY(-50%);
-    }
+.profile-dropdown-menu {
+    position: absolute;
+    bottom: calc(100% + 12px);
+    left: 0;
+    width: 220px;
+    background: rgba(18, 24, 41, 0.95);
+    border: 1px solid var(--color-border-subtle);
+    border-radius: 14px;
+    padding: 0.5rem;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    backdrop-filter: blur(16px);
+    box-shadow: 0 14px 35px rgba(0, 0, 0, 0.6);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(8px);
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    z-index: 100;
 }
 
-@media (max-width: 900px) {
-    .vertical-navbar-container {
-        position: absolute;
-        height: auto;
-        width: 100%;
-        flex-direction: row;
-        justify-content: space-between;
-        align-items: center;
-        padding: 1rem;
-    }
+.bottom-left-profile-widget:hover .profile-dropdown-menu {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
 
-    .vertical-dialer-wrap {
-        display: none;
-    }
+.profile-dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.6rem 0.85rem;
+    border-radius: 8px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--color-text-secondary);
+    text-decoration: none;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    width: 100%;
+    box-sizing: border-box;
+}
 
-    .top-auth-actions-floating {
-        position: static;
-    }
+.profile-dropdown-item:hover {
+    color: var(--color-text-primary);
+    background: var(--color-bg-elevated);
+}
+
+.profile-dropdown-item.accent:hover {
+    color: var(--color-accent-coral);
+    border-left: 2px solid var(--color-accent-coral);
+}
+
+.profile-dropdown-item.danger {
+    color: var(--color-danger);
+    border-top: 1px solid var(--color-border-subtle);
+    margin-top: 0.2rem;
+    padding-top: 0.65rem;
+}
+
+.profile-dropdown-item.danger:hover {
+    background: rgba(239, 68, 68, 0.15);
+    color: #ffffff;
+}
+
+.profile-login-prompt {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.65rem 1rem;
+    border-radius: 10px;
+    background: rgba(18, 24, 41, 0.7);
+    border: 1px solid var(--color-border-subtle);
+    color: var(--color-text-primary);
+    text-decoration: none;
+    font-size: 0.82rem;
+    font-weight: 700;
+    backdrop-filter: blur(12px);
+    transition: all 0.2s ease;
+}
+
+.profile-login-prompt:hover {
+    border-color: var(--color-primary);
+    color: var(--color-primary-light);
 }

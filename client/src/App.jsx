@@ -6,10 +6,12 @@ import Navbar from "./components/NavBar"
 import Home from "./pages/Home"
 import MovieDetail from "./pages/MovieDetail"
 import SeatBooking from "./pages/SeatBooking"
+import AdminDashboard from "./pages/admin/AdminDashboard"
 import Login from "./pages/auth/Login"
 import Register from "./pages/auth/Register"
 import ProtectedRoute from "./routes/ProtectedRoute"
 import GuestRoute from "./routes/GuestRoute"
+import AdminRoute from "./routes/AdminRoute"
 
 export default function App() {
   const dispatch = useDispatch()
@@ -21,8 +23,8 @@ export default function App() {
 
   if (!isInitialized) {
     return (
-      <div style={{ minHeight: "100vh", backgroundColor: "var(--color-bg-primary)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <div style={{ width: "2.5rem", height: "2.5rem", border: "3px solid var(--color-border-subtle)", borderTopColor: "var(--color-primary)", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
+      <div style={{ minHeight: "100vh", backgroundColor: "#0A0F1D", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <div style={{ width: "2.5rem", height: "2.5rem", border: "3px solid #24304D", borderTopColor: "#3B82F6", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
       </div>
     )
   }
@@ -41,6 +43,10 @@ export default function App() {
 
         <Route element={<ProtectedRoute />}>
           <Route path="/booking/:showtimeId" element={<SeatBooking />} />
+        </Route>
+
+        <Route element={<AdminRoute />}>
+          <Route path="/admin/dashboard" element={<AdminDashboard />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/" replace />} />

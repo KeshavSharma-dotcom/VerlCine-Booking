@@ -2,6 +2,7 @@ import React, { useEffect, useState, useMemo, useRef } from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import { useSelector } from "react-redux"
 import { io } from "socket.io-client"
+import { saveSelectedSeats, getSavedSeats, clearSavedSeats } from "../services/seatStorage"
 import "../assets/styles/seatMatrix.css"
 
 export const SeatBooking = () => {
@@ -11,7 +12,9 @@ export const SeatBooking = () => {
 
     const [showtime, setShowtime] = useState(null)
     const [seats, setSeats] = useState([])
-    const [selectedSeats, setSelectedSeats] = useState([])
+    const [selectedSeats, setSelectedSeats] = useState(() => {
+        return getSavedSeats(showtimeId).seats
+    })
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState("")
 
@@ -64,7 +67,11 @@ export const SeatBooking = () => {
                         : s
                 )
             )
-            setSelectedSeats((prev) => prev.filter((num) => !expiredSeatNumbers.includes(num)))
+            setSelectedSeats((prev) => {
+                const updated = prev.filter((num) => !expiredSeatNumbers.includes(num))
+                saveSelectedSeats(showtimeId, updated)
+                return updated
+            })
         })
 
         return () => {
@@ -107,24 +114,28 @@ export const SeatBooking = () => {
         const socketInstance = socketRef.current
         if (!socketInstance) return
 
+        let updatedSeats = []
+
         if (selectedSeats.includes(seat.seatNumber)) {
-            setSelectedSeats(selectedSeats.filter((num) => num !== seat.seatNumber))
+            updatedSeats = selectedSeats.filter((num) => num !== seat.seatNumber)
+            setSelectedSeats(updatedSeats)
             socketInstance.emit("unlock-seat", {
                 showtimeId,
                 seatNumber: seat.seatNumber,
                 userId: user._id
             })
         } else {
-            if (selectedSeats.length >= 6) {
-                return
-            }
-            setSelectedSeats([...selectedSeats, seat.seatNumber])
+            if (selectedSeats.length >= 6) return
+            updatedSeats = [...selectedSeats, seat.seatNumber]
+            setSelectedSeats(updatedSeats)
             socketInstance.emit("lock-seat", {
                 showtimeId,
                 seatNumber: seat.seatNumber,
                 userId: user._id
             })
         }
+
+        saveSelectedSeats(showtimeId, updatedSeats, updatedSeats.length * (showtime?.ticketPrice || 0))
     }
 
     const getSeatClassName = (seat) => {
@@ -137,6 +148,7 @@ export const SeatBooking = () => {
     const totalPrice = selectedSeats.length * (showtime?.ticketPrice || 0)
 
     const handleCheckoutProceed = () => {
+        saveSelectedSeats(showtimeId, selectedSeats, totalPrice)
         navigate(`/checkout/${showtimeId}`, {
             state: {
                 selectedSeats,
@@ -150,7 +162,6 @@ export const SeatBooking = () => {
         return (
             <div className="seat-matrix-wrapper">
                 <div className="seat-matrix-loading">
-                    <div className="home-spinner"></div>
                     <p style={{ color: "var(--color-text-secondary)" }}>Configuring seat matrix...</p>
                 </div>
             </div>
