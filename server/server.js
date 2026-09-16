@@ -13,6 +13,8 @@ const startReminderScheduler = require("./utils/reminderScheduler")
 
 const authRoutes = require("./routes/authRoutes")
 const movieRoutes = require("./routes/movieRoutes")
+const showTimeRoutes = require("./routes/showTimeRoutes")
+const theatreRoutes = require("./routes/theatreRoutes")
 
 const app = express()
 const server = http.createServer(app)
@@ -39,6 +41,8 @@ app.use(dataSan)
 
 app.use("/api/auth", authRoutes)
 app.use("/api/movies", movieRoutes)
+app.use("/api/showtimes",showTimeRoutes)
+app.use("/app/theare",theatreRoutes)
 
 app.use((req, res, next) => {
     const error = new Error(`Not Found - ${req.originalUrl}`)
