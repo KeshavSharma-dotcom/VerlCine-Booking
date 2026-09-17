@@ -101,33 +101,6 @@ const moviesData = [
         isActive: true
     },
     {
-        title: "Kalki 2898 AD",
-        description: "A modern-day avatar of Vishnu descends to earth to protect the world from evil forces in a desolate, dystopian future.",
-        genre: ["Action", "Sci-Fi"],
-        durationMinutes: 181,
-        rating: "PG-13",
-        posterUrl: "https://image.tmdb.org/t/p/w780/9Pt8v4zN48tCj9x2kF8a2t59Gq1.jpg",
-        isActive: true
-    },
-    {
-        title: "Jawan",
-        description: "A high-octane action thriller outlining the emotional journey of a man set out to rectify the wrongs in the society with a personal score.",
-        genre: ["Action", "Thriller"],
-        durationMinutes: 169,
-        rating: "PG-13",
-        posterUrl: "https://image.tmdb.org/t/p/w780/jFt1g94utjjrUCSpFfWtzsmEL7V.jpg",
-        isActive: true
-    },
-    {
-        title: "RRR",
-        description: "A fearless revolutionary and an officer in the British force decide to join forces to chart out an inspiring path of freedom.",
-        genre: ["Action", "Drama"],
-        durationMinutes: 187,
-        rating: "PG-13",
-        posterUrl: "https://image.tmdb.org/t/p/w780/nEufeZlyAOLqO2brrs0yeMu1QXO.jpg",
-        isActive: true
-    },
-    {
         title: "Parasite",
         description: "Greed and class discrimination threaten the newly formed symbiotic relationship between the wealthy Park family and the destitute Kim clan.",
         genre: ["Drama", "Thriller"],
@@ -179,15 +152,6 @@ const moviesData = [
         durationMinutes: 148,
         rating: "PG-13",
         posterUrl: "https://image.tmdb.org/t/p/w780/1g0dhYtq4irTY1GPXvft6k4YLjm.jpg",
-        isActive: true
-    },
-    {
-        title: "Everything Everywhere All at Once",
-        description: "A middle-aged Chinese immigrant is swept up into an insane adventure in which she alone can save existence by exploring other universes.",
-        genre: ["Action", "Adventure", "Comedy"],
-        durationMinutes: 139,
-        rating: "R",
-        posterUrl: "https://image.tmdb.org/t/p/w780/w3LxiVYPqrlexP02LOVup9bAcgx.jpg",
         isActive: true
     }
 ]

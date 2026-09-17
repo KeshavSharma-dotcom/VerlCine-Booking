@@ -4,14 +4,11 @@ const screenSchema = new mongoose.Schema(
     {
         screenNumber: {
             type: Number,
-            required: [true, "Screen number is required"],
-            min: [1, "Screen number must be at least 1"]
+            required: [true, "Screen number is required"]
         },
         totalSeats: {
             type: Number,
-            required: [true, "Total seats are required"],
-            min: [1, "Screen must have at least 1 seat"],
-            default: 100
+            required: [true, "Total seats count is required"]
         }
     },
     { _id: false }
@@ -22,14 +19,7 @@ const theatreSchema = new mongoose.Schema(
         name: {
             type: String,
             required: [true, "Theatre name is required"],
-            trim: true,
-            index: true
-        },
-        owner: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "User",
-            required: [true, "Theatre owner is required"],
-            index: true
+            trim: true
         },
         city: {
             type: String,
@@ -38,38 +28,55 @@ const theatreSchema = new mongoose.Schema(
         },
         address: {
             type: String,
-            required: [true, "Address is required"],
+            required: [true, "Street address is required"],
             trim: true
+        },
+        location: {
+            type: {
+                type: String,
+                enum: ["Point"],
+                default: "Point"
+            },
+            coordinates: {
+                type: [Number],
+                required: [true, "Coordinates [longitude, latitude] are required"]
+            }
+        },
+        osmId: {
+            type: String,
+            default: null,
+            trim: true
+        },
+        osmType: {
+            type: String,
+            enum: ["node", "way", "relation", null],
+            default: null
+        },
+        tags: {
+            type: Map,
+            of: String,
+            default: {}
         },
         screens: {
             type: [screenSchema],
-            validate: {
-                validator: (screens) => Array.isArray(screens) && screens.length > 0,
-                message: "At least one screen is required"
-            }
+            default: []
+        },
+        owner: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User",
+            default: null
         },
         isActive: {
             type: Boolean,
-            default: true,
-            index: true
+            default: true
         }
     },
-    {
-        timestamps: true,
-        toJSON: { virtuals: true },
-        toObject: { virtuals: true }
-    }
+    { timestamps: true }
 )
 
+theatreSchema.index({ location: "2dsphere" })
+theatreSchema.index({ osmId: 1 }, { unique: true, sparse: true })
 theatreSchema.index({ city: 1, isActive: 1 })
-theatreSchema.index({ owner: 1, isActive: 1 })
-theatreSchema.index({ name: "text", city: "text", address: "text" })
-
-theatreSchema.virtual("showtimes", {
-    ref: "Showtime",
-    localField: "_id",
-    foreignField: "theatre"
-})
 
 const Theatre = mongoose.models.Theatre || mongoose.model("Theatre", theatreSchema)
 
