@@ -42,6 +42,7 @@ export default function App() {
         </Route>
 
         <Route element={<ProtectedRoute />}>
+          <Route path="/seat-booking/:movieId" element={<SeatBooking />} />
           <Route path="/booking/:showtimeId" element={<SeatBooking />} />
         </Route>
 

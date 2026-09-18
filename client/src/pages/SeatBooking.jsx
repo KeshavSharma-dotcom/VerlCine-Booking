@@ -1,184 +1,161 @@
-import React, { useEffect, useState, useMemo, useRef } from "react"
+import React, { useState, useEffect, useMemo } from "react"
 import { useParams, useNavigate } from "react-router-dom"
-import { useSelector } from "react-redux"
-import { io } from "socket.io-client"
-import { saveSelectedSeats, getSavedSeats, clearSavedSeats } from "../services/seatStorage"
-import "../assets/styles/seatMatrix.css"
+import { useSelector, useDispatch } from "react-redux"
+import Navbar from "../components/NavBar"
+import "../assets/styles/seatBooking.css"
 
 export const SeatBooking = () => {
-    const { showtimeId } = useParams()
+    const { movieId } = useParams()
     const navigate = useNavigate()
-    const { user } = useSelector((state) => state.auth)
+    const dispatch = useDispatch()
 
-    const [showtime, setShowtime] = useState(null)
-    const [seats, setSeats] = useState([])
-    const [selectedSeats, setSelectedSeats] = useState(() => {
-        return getSavedSeats(showtimeId).seats
-    })
+    const { isAuthenticated, user } = useSelector((state) => state.auth)
+    const { selectedCity, userLocation } = useSelector((state) => state.theatre)
+
+    const [movie, setMovie] = useState(null)
+    const [showtimes, setShowtimes] = useState([])
+    const [selectedShowtime, setSelectedShowtime] = useState(null)
+    const [selectedSeats, setSelectedSeats] = useState([])
     const [loading, setLoading] = useState(true)
-    const [error, setError] = useState("")
-
-    const socketRef = useRef(null)
+    const [bookingLoading, setBookingLoading] = useState(false)
+    const [error, setError] = useState(null)
 
     useEffect(() => {
-        const fetchShowtimeDetails = async () => {
+        const fetchBookingData = async () => {
             try {
-                const response = await fetch(`/api/showtimes/${showtimeId}`, {
-                    method: "GET",
-                    headers: { "Content-Type": "application/json" },
-                    credentials: "include"
-                })
-                const data = await response.json()
-                if (!response.ok) {
-                    throw new Error(data.message || "Failed to load showtime matrix")
+                setLoading(true)
+                setError(null)
+
+                const movieRes = await fetch(`/api/v1/movies/${movieId}`)
+                const movieData = await movieRes.json()
+
+                if (!movieRes.ok || !movieData.movie) {
+                    throw new Error(movieData.message || "Failed to load movie details")
                 }
-                setShowtime(data.showtime)
-                setSeats(data.showtime.seats || [])
-                setLoading(false)
+                setMovie(movieData.movie)
+
+                const showtimesRes = await fetch(`/api/v1/showtimes?movie=${movieId}&city=${encodeURIComponent(selectedCity || "Mumbai")}`)
+                const showtimesData = await showtimesRes.json()
+
+                if (showtimesRes.ok && Array.isArray(showtimesData.showtimes)) {
+                    setShowtimes(showtimesData.showtimes)
+                    if (showtimesData.showtimes.length > 0) {
+                        setSelectedShowtime(showtimesData.showtimes[0])
+                    }
+                } else {
+                    setShowtimes([])
+                }
             } catch (err) {
-                setError(err.message || "Failed to load showtime matrix")
+                setError(err.message || "Error retrieving showtimes")
+            } finally {
                 setLoading(false)
             }
         }
 
-        fetchShowtimeDetails()
-
-        const socketInstance = io(window.location.origin, {
-            path: "/socket.io"
-        })
-        socketRef.current = socketInstance
-
-        socketInstance.emit("join-showtime", { showtimeId })
-
-        socketInstance.on("seats-updated", ({ updatedSeats }) => {
-            setSeats((prev) =>
-                prev.map((s) => {
-                    const match = updatedSeats.find((u) => u.seatNumber === s.seatNumber)
-                    return match ? { ...s, ...match } : s
-                })
-            )
-        })
-
-        socketInstance.on("seat-lock-expired", ({ expiredSeatNumbers }) => {
-            setSeats((prev) =>
-                prev.map((s) =>
-                    expiredSeatNumbers.includes(s.seatNumber)
-                        ? { ...s, status: "available", lockedBy: null, lockedUntil: null }
-                        : s
-                )
-            )
-            setSelectedSeats((prev) => {
-                const updated = prev.filter((num) => !expiredSeatNumbers.includes(num))
-                saveSelectedSeats(showtimeId, updated)
-                return updated
-            })
-        })
-
-        return () => {
-            socketInstance.emit("leave-showtime", { showtimeId })
-            socketInstance.disconnect()
-            socketRef.current = null
+        if (movieId) {
+            fetchBookingData()
         }
-    }, [showtimeId])
+    }, [movieId, selectedCity])
 
-    const groupedRows = useMemo(() => {
-        const rows = {}
-        seats.forEach((seat) => {
-            const rowLabel = seat.seatNumber.charAt(0)
-            if (!rows[rowLabel]) {
-                rows[rowLabel] = []
+    const groupedByTheatre = useMemo(() => {
+        const map = new Map()
+        showtimes.forEach((st) => {
+            const theatreId = st.theatre?._id || st.theatre
+            if (!theatreId) return
+
+            if (!map.has(theatreId)) {
+                map.set(theatreId, {
+                    theatre: st.theatre,
+                    shows: []
+                })
             }
-            rows[rowLabel].push(seat)
+            map.get(theatreId).shows.push(st)
         })
-
-        Object.keys(rows).forEach((rowKey) => {
-            rows[rowKey].sort((a, b) => {
-                const numA = parseInt(a.seatNumber.substring(1), 10)
-                const numB = parseInt(b.seatNumber.substring(1), 10)
-                return numA - numB
-            })
-        })
-
-        return Object.entries(rows).sort(([a], [b]) => a.localeCompare(b))
-    }, [seats])
+        return Array.from(map.values())
+    }, [showtimes])
 
     const handleSeatClick = (seat) => {
-        if (!user?._id) {
+        if (seat.status !== "available") return
+
+        const exists = selectedSeats.find((s) => s.seatNumber === seat.seatNumber)
+        if (exists) {
+            setSelectedSeats(selectedSeats.filter((s) => s.seatNumber !== seat.seatNumber))
+        } else {
+            if (selectedSeats.length >= 8) {
+                alert("Maximum 8 seats per booking session allowed")
+                return
+            }
+            setSelectedSeats([...selectedSeats, seat])
+        }
+    }
+
+    const handleSelectShowtime = (show) => {
+        setSelectedShowtime(show)
+        setSelectedSeats([])
+    }
+
+    const handleConfirmBooking = async () => {
+        if (!isAuthenticated) {
             navigate("/login")
             return
         }
 
-        if (seat.status === "booked") return
-        if (seat.status === "locked" && seat.lockedBy !== user._id) return
-
-        const socketInstance = socketRef.current
-        if (!socketInstance) return
-
-        let updatedSeats = []
-
-        if (selectedSeats.includes(seat.seatNumber)) {
-            updatedSeats = selectedSeats.filter((num) => num !== seat.seatNumber)
-            setSelectedSeats(updatedSeats)
-            socketInstance.emit("unlock-seat", {
-                showtimeId,
-                seatNumber: seat.seatNumber,
-                userId: user._id
-            })
-        } else {
-            if (selectedSeats.length >= 6) return
-            updatedSeats = [...selectedSeats, seat.seatNumber]
-            setSelectedSeats(updatedSeats)
-            socketInstance.emit("lock-seat", {
-                showtimeId,
-                seatNumber: seat.seatNumber,
-                userId: user._id
-            })
+        if (selectedSeats.length === 0 || !selectedShowtime) {
+            alert("Please select at least one seat to continue")
+            return
         }
 
-        saveSelectedSeats(showtimeId, updatedSeats, updatedSeats.length * (showtime?.ticketPrice || 0))
-    }
+        try {
+            setBookingLoading(true)
+            const seatNumbers = selectedSeats.map((s) => s.seatNumber)
 
-    const getSeatClassName = (seat) => {
-        if (seat.status === "booked") return "seat-unit booked"
-        if (selectedSeats.includes(seat.seatNumber)) return "seat-unit selected"
-        if (seat.status === "locked") return "seat-unit locked"
-        return "seat-unit available"
-    }
+            const response = await fetch("/api/v1/bookings", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                credentials: "include",
+                body: JSON.stringify({
+                    showtimeId: selectedShowtime._id,
+                    seats: seatNumbers,
+                    totalAmount: selectedSeats.length * (selectedShowtime.ticketPrice || 250)
+                })
+            })
 
-    const totalPrice = selectedSeats.length * (showtime?.ticketPrice || 0)
+            const data = await response.json()
 
-    const handleCheckoutProceed = () => {
-        saveSelectedSeats(showtimeId, selectedSeats, totalPrice)
-        navigate(`/checkout/${showtimeId}`, {
-            state: {
-                selectedSeats,
-                showtime,
-                totalPrice
+            if (!response.ok) {
+                throw new Error(data.message || "Booking creation failed")
             }
-        })
+
+            navigate(`/booking-success/${data.booking?._id || ""}`)
+        } catch (err) {
+            alert(err.message || "Unable to lock seats. They may have been booked just now.")
+        } finally {
+            setBookingLoading(false)
+        }
     }
 
     if (loading) {
         return (
-            <div className="seat-matrix-wrapper">
-                <div className="seat-matrix-loading">
-                    <p style={{ color: "var(--color-text-secondary)" }}>Configuring seat matrix...</p>
+            <div className="seat-booking-container">
+                <Navbar />
+                <div className="booking-loading-state">
+                    <div className="booking-spinner"></div>
+                    <p>Loading real showtimes & seating layout in {selectedCity}...</p>
                 </div>
             </div>
         )
     }
 
-    if (error || !showtime) {
+    if (error || !movie) {
         return (
-            <div className="seat-matrix-wrapper">
-                <div className="seat-matrix-loading">
-                    <p style={{ color: "var(--color-danger)" }}>{error || "Showtime not found"}</p>
-                    <button
-                        onClick={() => navigate(-1)}
-                        className="seat-checkout-btn"
-                        style={{ marginTop: "1rem" }}
-                    >
-                        Go Back
+            <div className="seat-booking-container">
+                <Navbar />
+                <div className="booking-error-state">
+                    <p>{error || "Movie not found"}</p>
+                    <button onClick={() => navigate("/")} className="booking-back-btn">
+                        Back to Home
                     </button>
                 </div>
             </div>
@@ -186,90 +163,144 @@ export const SeatBooking = () => {
     }
 
     return (
-        <div className="seat-matrix-wrapper">
-            <main className="seat-matrix-container">
-                <div className="seat-matrix-header">
-                    <div>
-                        <h1 className="seat-matrix-title">{showtime.movie?.title}</h1>
-                        <div className="seat-matrix-meta">
-                            <span>{showtime.theatre?.name}</span>
-                            <span>•</span>
-                            <span>Screen {showtime.screenNumber}</span>
-                            <span>•</span>
-                            <span>{new Date(showtime.startTime).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
+        <div className="seat-booking-container">
+            <Navbar />
+
+            <main className="seat-booking-wrap">
+                <header className="booking-movie-header">
+                    <div className="booking-poster-box">
+                        <img src={movie.posterUrl} alt={movie.title} className="booking-poster-img" />
+                    </div>
+                    <div className="booking-movie-meta">
+                        <span className="booking-pill-badge">{movie.rating || "PG-13"}</span>
+                        <h1 className="booking-movie-title">{movie.title}</h1>
+                        <p className="booking-movie-genres">
+                            {Array.isArray(movie.genre) ? movie.genre.join(" • ") : movie.genre} | {movie.durationMinutes} mins
+                        </p>
+                        <p className="booking-region-notice">
+                            Displaying real Overpass screens in <strong>{selectedCity}</strong>
+                        </p>
+                    </div>
+                </header>
+
+                <section className="booking-theatres-section">
+                    <h2 className="booking-section-heading">Available Cinemas & Time Slots</h2>
+
+                    {groupedByTheatre.length === 0 ? (
+                        <div className="booking-empty-theatres">
+                            <p>No showtimes scheduled for this title in {selectedCity} right now.</p>
+                            <span>Try selecting another region from the city selector.</span>
                         </div>
-                    </div>
-                    <div className="seat-matrix-timer-badge">
-                        ₹{showtime.ticketPrice} / ticket
-                    </div>
-                </div>
-
-                <div className="seat-screen-display">
-                    <div className="seat-screen-curve"></div>
-                    <span className="seat-screen-label">ALL EYES THIS WAY</span>
-                </div>
-
-                <div className="seat-legend">
-                    <div className="seat-legend-item">
-                        <span className="seat-legend-dot available"></span>
-                        <span>Available</span>
-                    </div>
-                    <div className="seat-legend-item">
-                        <span className="seat-legend-dot selected"></span>
-                        <span>Selected</span>
-                    </div>
-                    <div className="seat-legend-item">
-                        <span className="seat-legend-dot locked"></span>
-                        <span>Reserved/Holding</span>
-                    </div>
-                    <div className="seat-legend-item">
-                        <span className="seat-legend-dot booked"></span>
-                        <span>Booked</span>
-                    </div>
-                </div>
-
-                <div className="seat-grid">
-                    {groupedRows.map(([rowLabel, rowSeats]) => (
-                        <div key={rowLabel} className="seat-row">
-                            <span className="seat-row-label">{rowLabel}</span>
-                            {rowSeats.map((seat) => (
-                                <button
-                                    key={seat._id || seat.seatNumber}
-                                    className={getSeatClassName(seat)}
-                                    onClick={() => handleSeatClick(seat)}
-                                    disabled={seat.status === "booked" || (seat.status === "locked" && seat.lockedBy !== user?._id)}
+                    ) : (
+                        <div className="theatres-showtimes-list">
+                            {groupedByTheatre.map(({ theatre, shows }) => (
+                                <div
+                                    key={theatre?._id || Math.random()}
+                                    className={`theatre-showtime-block ${selectedShowtime?.theatre?._id === theatre?._id ? "active-theatre" : ""}`}
                                 >
-                                    {seat.seatNumber.substring(1)}
-                                </button>
+                                    <div className="theatre-info-panel">
+                                        <h3 className="theatre-name">{theatre?.name || "Cinema Hall"}</h3>
+                                        <p className="theatre-address">{theatre?.address || selectedCity}</p>
+                                    </div>
+
+                                    <div className="theatre-slots-grid">
+                                        {shows.map((show) => {
+                                            const isSelected = selectedShowtime?._id === show._id
+                                            const dateObj = new Date(show.startTime)
+                                            const timeString = dateObj.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+
+                                            return (
+                                                <button
+                                                    key={show._id}
+                                                    onClick={() => handleSelectShowtime(show)}
+                                                    className={`theatre-slot-pill ${isSelected ? "selected-slot" : ""}`}
+                                                >
+                                                    <span className="slot-time">{timeString}</span>
+                                                    <span className="slot-price">₹{show.ticketPrice || 250}</span>
+                                                    <span className="slot-screen">Screen {show.screenNumber || 1}</span>
+                                                </button>
+                                            )
+                                        })}
+                                    </div>
+                                </div>
                             ))}
-                            <span className="seat-row-label">{rowLabel}</span>
                         </div>
-                    ))}
-                </div>
+                    )}
+                </section>
+
+                {selectedShowtime && (
+                    <section className="booking-seat-matrix-section">
+                        <div className="screen-indicator-box">
+                            <div className="screen-curve"></div>
+                            <span className="screen-label">CINEMA SCREEN</span>
+                        </div>
+
+                        <div className="seat-grid-container">
+                            <div className="seat-grid-layout">
+                                {(selectedShowtime.seats || []).map((seat) => {
+                                    const isChosen = selectedSeats.some((s) => s.seatNumber === seat.seatNumber)
+                                    const isUnavailable = seat.status === "booked" || seat.status === "reserved" || seat.status === "locked"
+
+                                    let seatClass = "seat-item available"
+                                    if (isUnavailable) seatClass = "seat-item booked"
+                                    if (isChosen) seatClass = "seat-item selected"
+
+                                    return (
+                                        <button
+                                            key={seat.seatNumber}
+                                            onClick={() => handleSeatClick(seat)}
+                                            disabled={isUnavailable}
+                                            className={seatClass}
+                                            title={`${seat.seatNumber} - ₹${selectedShowtime.ticketPrice || 250}`}
+                                        >
+                                            {seat.seatNumber}
+                                        </button>
+                                    )
+                                })}
+                            </div>
+                        </div>
+
+                        <div className="seat-legend-bar">
+                            <div className="legend-item">
+                                <span className="legend-sample available"></span>
+                                <span>Available</span>
+                            </div>
+                            <div className="legend-item">
+                                <span className="legend-sample selected"></span>
+                                <span>Selected</span>
+                            </div>
+                            <div className="legend-item">
+                                <span className="legend-sample booked"></span>
+                                <span>Booked</span>
+                            </div>
+                        </div>
+
+                        <div className="booking-checkout-bar">
+                            <div className="checkout-summary">
+                                <span className="summary-label">Selected Seats:</span>
+                                <span className="summary-seats">
+                                    {selectedSeats.length > 0
+                                        ? selectedSeats.map((s) => s.seatNumber).join(", ")
+                                        : "None"}
+                                </span>
+                                <span className="summary-total">
+                                    Total: ₹{selectedSeats.length * (selectedShowtime.ticketPrice || 250)}
+                                </span>
+                            </div>
+
+                            <button
+                                onClick={handleConfirmBooking}
+                                disabled={selectedSeats.length === 0 || bookingLoading}
+                                className="checkout-confirm-btn"
+                            >
+                                {bookingLoading
+                                    ? "Reserving..."
+                                    : `Pay ₹${selectedSeats.length * (selectedShowtime.ticketPrice || 250)}`}
+                            </button>
+                        </div>
+                    </section>
+                )}
             </main>
-
-            <footer className="seat-checkout-bar">
-                <div className="seat-checkout-inner">
-                    <div className="seat-checkout-details">
-                        <span className="seat-selected-list">
-                            {selectedSeats.length > 0
-                                ? `Seats: ${selectedSeats.join(", ")}`
-                                : "Select your seats (Up to 6)"}
-                        </span>
-                        <span className="seat-total-price">
-                            ₹{totalPrice}
-                        </span>
-                    </div>
-
-                    <button
-                        className="seat-checkout-btn"
-                        disabled={selectedSeats.length === 0}
-                        onClick={handleCheckoutProceed}
-                    >
-                        Proceed to Payment
-                    </button>
-                </div>
-            </footer>
         </div>
     )
 }

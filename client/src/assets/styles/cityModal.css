@@ -1,0 +1,316 @@
+.city-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    background: rgba(4, 7, 18, 0.75);
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding-top: 5vh;
+    animation: cityFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.city-modal-container {
+    width: 92%;
+    max-width: 680px;
+    background: #0f172a;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 1.25rem;
+    box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.8), 0 0 40px rgba(56, 189, 248, 0.08);
+    display: flex;
+    flex-direction: column;
+    max-height: 85vh;
+    overflow: hidden;
+    animation: citySlideDown 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.city-modal-header {
+    display: flex;
+    align-items: center;
+    padding: 1.25rem 1.5rem;
+    gap: 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    background: #131d36;
+}
+
+.city-search-input-box {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    background: rgba(30, 41, 59, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 0.75rem;
+    padding: 0 1rem;
+    gap: 0.75rem;
+    transition: all 0.2s ease;
+}
+
+.city-search-input-box:focus-within {
+    border-color: #38bdf8;
+    box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.15);
+}
+
+.city-search-icon {
+    width: 18px;
+    height: 18px;
+    color: #94a3b8;
+    flex-shrink: 0;
+}
+
+.city-modal-input {
+    width: 100%;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: #f8fafc;
+    font-size: 0.95rem;
+    padding: 0.85rem 0;
+}
+
+.city-modal-input::placeholder {
+    color: #64748b;
+}
+
+.city-modal-clear-btn {
+    background: none;
+    border: none;
+    color: #94a3b8;
+    cursor: pointer;
+    font-size: 0.85rem;
+    padding: 0.25rem;
+}
+
+.city-modal-clear-btn:hover {
+    color: #f8fafc;
+}
+
+.city-modal-close-btn {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: #94a3b8;
+    border-radius: 0.5rem;
+    width: 38px;
+    height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.city-modal-close-btn:hover {
+    background: rgba(255, 255, 255, 0.12);
+    color: #ffffff;
+}
+
+.city-modal-body {
+    padding: 1.5rem;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.city-detect-bar {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.9rem 1.1rem;
+    background: linear-gradient(135deg, rgba(30, 41, 59, 0.6) 0%, rgba(15, 23, 42, 0.9) 100%);
+    border: 1px solid rgba(56, 189, 248, 0.25);
+    border-radius: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.city-detect-bar:hover {
+    background: linear-gradient(135deg, rgba(56, 189, 248, 0.12) 0%, rgba(30, 41, 59, 0.9) 100%);
+    border-color: #38bdf8;
+    transform: translateY(-1px);
+}
+
+.city-detect-icon-box {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: rgba(56, 189, 248, 0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #38bdf8;
+    flex-shrink: 0;
+}
+
+.city-detect-crosshair {
+    width: 20px;
+    height: 20px;
+}
+
+.city-detect-text h4 {
+    margin: 0;
+    font-size: 0.95rem;
+    color: #f8fafc;
+    font-weight: 600;
+}
+
+.city-detect-text p {
+    margin: 0.2rem 0 0;
+    font-size: 0.78rem;
+    color: #94a3b8;
+}
+
+.city-detect-error {
+    background: rgba(239, 68, 68, 0.12);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    color: #fca5a5;
+    padding: 0.75rem 1rem;
+    border-radius: 0.65rem;
+    font-size: 0.85rem;
+}
+
+.city-section-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+}
+
+.city-section-label {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #64748b;
+    font-weight: 700;
+}
+
+.city-popular-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap: 0.75rem;
+}
+
+.city-popular-card {
+    background: rgba(30, 41, 59, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 0.75rem;
+    padding: 0.85rem 0.6rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.city-popular-card:hover {
+    background: rgba(56, 189, 248, 0.1);
+    border-color: rgba(56, 189, 248, 0.4);
+    transform: translateY(-2px);
+}
+
+.city-popular-card.active {
+    background: rgba(249, 115, 22, 0.15);
+    border-color: #f97316;
+}
+
+.city-popular-name {
+    color: #ffffff;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.city-popular-state {
+    color: #94a3b8;
+    font-size: 0.7rem;
+    margin-top: 0.2rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+}
+
+.city-alphabetical-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.55rem;
+}
+
+.city-pill-btn {
+    background: rgba(30, 41, 59, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: 2rem;
+    padding: 0.45rem 0.95rem;
+    color: #cbd5e1;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.city-pill-btn:hover {
+    background: #1e293b;
+    border-color: #94a3b8;
+    color: #ffffff;
+}
+
+.city-pill-btn.selected {
+    background: #f97316;
+    border-color: #f97316;
+    color: #ffffff;
+    font-weight: 600;
+}
+
+.city-pill-check {
+    font-size: 0.8rem;
+}
+
+.city-no-results {
+    text-align: center;
+    padding: 2rem 1rem;
+    color: #94a3b8;
+}
+
+.city-no-results p {
+    margin: 0 0 0.5rem;
+    color: #f1f5f9;
+    font-size: 0.95rem;
+}
+
+.city-modal-spinner {
+    width: 18px;
+    height: 18px;
+    border: 2px solid rgba(56, 189, 248, 0.2);
+    border-top-color: #38bdf8;
+    border-radius: 50%;
+    animation: citySpin 0.7s linear infinite;
+    margin-left: auto;
+}
+
+@keyframes cityFadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes citySlideDown {
+    from {
+        transform: translateY(-20px) scale(0.97);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0) scale(1);
+        opacity: 1;
+    }
+}
+
+@keyframes citySpin {
+    to {
+        transform: rotate(360deg);
+    }
+}

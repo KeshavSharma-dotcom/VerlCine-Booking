@@ -2,20 +2,37 @@ import React, { useEffect, useState, useMemo } from "react"
 import { Link } from "react-router-dom"
 import { useSelector, useDispatch } from "react-redux"
 import { fetchMovies } from "../redux/thunks/movieThunks"
+import { fetchNearbyTheatres, fetchTheatreCities } from "../redux/thunks/theatreThunks"
 import Navbar from "../components/NavBar"
+import CitySelectorModal from "../components/CitySelectorModal"
 import "../assets/styles/animatedBg.css"
 import "../assets/styles/home.css"
 
 export const Home = () => {
     const dispatch = useDispatch()
     const { isAuthenticated } = useSelector((state) => state.auth)
-    const { movies, loading, error } = useSelector((state) => state.movie)
+    const { movies, loading: moviesLoading, error: moviesError } = useSelector((state) => state.movie)
+    const { selectedCity, userLocation } = useSelector((state) => state.theatre)
+
     const [activeTab, setActiveTab] = useState("all")
     const [selectedGenre, setSelectedGenre] = useState("All")
+    const [isCityModalOpen, setIsCityModalOpen] = useState(false)
 
     useEffect(() => {
         dispatch(fetchMovies({ limit: 50 }))
+        dispatch(fetchTheatreCities())
     }, [dispatch])
+
+    useEffect(() => {
+        dispatch(
+            fetchNearbyTheatres({
+                lat: userLocation?.lat || 18.9690,
+                lng: userLocation?.lng || 72.8194,
+                radius: userLocation?.radiusKm || 50,
+                city: selectedCity || "Mumbai"
+            })
+        )
+    }, [dispatch, selectedCity, userLocation?.lat, userLocation?.lng, userLocation?.radiusKm])
 
     const isLiveEvent = (item) => {
         return item.genre?.some((g) =>
@@ -74,6 +91,11 @@ export const Home = () => {
 
     return (
         <div className="home-container">
+            <CitySelectorModal
+                isOpen={isCityModalOpen}
+                onClose={() => setIsCityModalOpen(false)}
+            />
+
             <div className="animated-bg-viewport">
                 <div className="animated-quad-canvas">
                     {quadPosters.map((url, idx) => (
@@ -105,13 +127,13 @@ export const Home = () => {
                             <p className="home-spotlight-desc">{featuredSpotlight.description}</p>
                             <div className="home-spotlight-actions">
                                 <Link
-                                    to={isAuthenticated ? `/movie/${featuredSpotlight._id}` : "/register"}
+                                    to={isAuthenticated ? `/seat-booking/${featuredSpotlight._id}` : "/register"}
                                     className="home-spotlight-book-btn"
                                 >
                                     Book Seats
                                 </Link>
                                 <span className="home-spotlight-city-tag">
-                                    Live in Jaipur (Raj Mandir, INOX, WTP)
+                                    Now Playing in {selectedCity}
                                 </span>
                             </div>
                         </div>
@@ -140,9 +162,15 @@ export const Home = () => {
                                 Live Standups & Shows
                             </button>
                         </div>
-                        <span className="home-feed-location-indicator">
-                            Showing screens around <strong>Jaipur (302001)</strong>
-                        </span>
+
+                        <button
+                            className="home-location-indicator-btn"
+                            onClick={() => setIsCityModalOpen(true)}
+                        >
+                            <span className="home-pin-icon">📍</span>
+                            <span>{selectedCity}</span>
+                            <span className="home-change-badge">Change</span>
+                        </button>
                     </div>
 
                     <div className="home-genre-scroll-bar">
@@ -159,14 +187,14 @@ export const Home = () => {
                 </section>
 
                 <section className="home-catalog-section">
-                    {loading ? (
+                    {moviesLoading ? (
                         <div className="home-loading-state">
                             <div className="home-spinner"></div>
-                            <p>Loading sessions in Jaipur...</p>
+                            <p>Loading titles in {selectedCity}...</p>
                         </div>
-                    ) : error ? (
+                    ) : moviesError ? (
                         <div className="home-error-state">
-                            <p>{error}</p>
+                            <p>{moviesError}</p>
                         </div>
                     ) : filteredCatalog.length === 0 ? (
                         <div className="home-empty-state">
@@ -177,7 +205,7 @@ export const Home = () => {
                             {filteredCatalog.map((item) => (
                                 <Link
                                     key={item._id}
-                                    to={isAuthenticated ? `/movie/${item._id}` : "/register"}
+                                    to={isAuthenticated ? `/seat-booking/${item._id}` : "/register"}
                                     className="home-movie-card"
                                 >
                                     <div className="home-movie-img-container">
@@ -199,7 +227,7 @@ export const Home = () => {
                                         <h3 className="home-movie-title">{item.title}</h3>
                                         <div className="home-movie-footer">
                                             <span className="home-movie-duration">{item.durationMinutes}m</span>
-                                            <span className="home-movie-view-link">Explore Showtimes</span>
+                                            <span className="home-movie-view-link">View Showtimes</span>
                                         </div>
                                     </div>
                                 </Link>
@@ -210,7 +238,7 @@ export const Home = () => {
             </main>
 
             <footer className="home-footer">
-                <p>&copy; {new Date().getFullYear()} CineVerl Inc. Jaipur, Rajasthan. All rights reserved.</p>
+                <p>&copy; {new Date().getFullYear()} CineVerl Inc. {selectedCity}. All rights reserved.</p>
             </footer>
         </div>
     )
