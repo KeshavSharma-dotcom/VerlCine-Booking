@@ -11,7 +11,7 @@ const { normalizeOsmCinemaBatch } = require("../services/osm/theatreNormalizer")
 const { syncCinemasFromOsm } = require("../services/theatreSyncService")
 const Theatre = require("../models/Theatre")
 
-const MONGO_URI = "mongodb+srv://rijianzhuren_db_user:2vEB1mTY89WvSljQ@moviesdata.4xivl1c.mongodb.net/"
+const MONGO_URI = process.env.MONGO_URL
 
 const runVerification = async () => {
     const results = []
