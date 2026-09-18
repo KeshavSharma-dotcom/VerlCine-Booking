@@ -41,8 +41,8 @@ app.use(dataSan)
 
 app.use("/api/auth", authRoutes)
 app.use("/api/movies", movieRoutes)
-app.use("/api/showtimes",showTimeRoutes)
-app.use("/app/theare",theatreRoutes)
+app.use("/api/v1/showtimes", showTimeRoutes)
+app.use("/api/v1/theatres", theatreRoutes)
 
 app.use((req, res, next) => {
     const error = new Error(`Not Found - ${req.originalUrl}`)

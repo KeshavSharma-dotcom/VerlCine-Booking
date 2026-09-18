@@ -1,39 +1,25 @@
 const express = require("express")
 const router = express.Router()
-const Theatre = require("../models/Theatre")
+const { protect, requireRole, requireTheatreAccess } = require("../middleware/verifyRole")
+const {
+    getAllTheatres,
+    getNearbyTheatres,
+    getTheatreById,
+    createTheatre,
+    updateTheatre,
+    deleteTheatre,
+    getDistinctCities,
+    triggerOsmSync
+} = require("../controller/theatreController")
 
-router.get("/", async (req, res, next) => {
-    try {
-        const theatres = await Theatre.find({ isActive: true }).sort({ createdAt: -1 })
-        res.status(200).json({ success: true, theatres })
-    } catch (err) {
-        next(err)
-    }
-})
+router.get("/cities", getDistinctCities)
+router.get("/nearby", getNearbyTheatres)
+router.get("/", getAllTheatres)
+router.get("/:id", getTheatreById)
 
-router.post("/", async (req, res, next) => {
-    try {
-        const { name, city, address, screens } = req.body
-        if (!name || !city || !address) {
-            return res.status(400).json({ success: false, message: "Missing required theatre details" })
-        }
-
-        const formattedScreens = Array.isArray(screens) && screens.length > 0
-            ? screens
-            : [{ screenNumber: 1, totalSeats: 60 }]
-
-        const theatre = await Theatre.create({
-            name: String(name).trim(),
-            city: String(city).trim(),
-            address: String(address).trim(),
-            screens: formattedScreens,
-            isActive: true
-        })
-
-        res.status(201).json({ success: true, message: "Theatre created successfully", theatre })
-    } catch (err) {
-        next(err)
-    }
-})
+router.post("/sync-osm", protect, requireRole("admin"), triggerOsmSync)
+router.post("/", protect, requireRole("admin"), createTheatre)
+router.put("/:id", protect, requireTheatreAccess, updateTheatre)
+router.delete("/:id", protect, requireRole("admin"), deleteTheatre)
 
 module.exports = router
