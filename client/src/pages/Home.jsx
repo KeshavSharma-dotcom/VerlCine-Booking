@@ -4,7 +4,7 @@ import { useSelector, useDispatch } from "react-redux"
 import { fetchMovies } from "../redux/thunks/movieThunks"
 import { fetchNearbyTheatres, fetchTheatreCities } from "../redux/thunks/theatreThunks"
 import Navbar from "../components/NavBar"
-import CitySelectorModal from "../components/CitySelectorModal"
+import CitySelectorModal from "../components/city/city"
 import "../assets/styles/animatedBg.css"
 import "../assets/styles/home.css"
 

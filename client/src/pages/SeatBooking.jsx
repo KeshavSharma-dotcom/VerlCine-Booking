@@ -1,16 +1,15 @@
 import React, { useState, useEffect, useMemo } from "react"
 import { useParams, useNavigate } from "react-router-dom"
-import { useSelector, useDispatch } from "react-redux"
-import Navbar from "../components/NavBar"
+import { useSelector } from "react-redux"
 import "../assets/styles/seatBooking.css"
 
 export const SeatBooking = () => {
-    const { movieId } = useParams()
+    const { movieId, showtimeId } = useParams()
+    const targetMovieId = movieId || showtimeId
     const navigate = useNavigate()
-    const dispatch = useDispatch()
 
-    const { isAuthenticated, user } = useSelector((state) => state.auth)
-    const { selectedCity, userLocation } = useSelector((state) => state.theatre)
+    const { isAuthenticated } = useSelector((state) => state.auth)
+    const { selectedCity } = useSelector((state) => state.theatre)
 
     const [movie, setMovie] = useState(null)
     const [showtimes, setShowtimes] = useState([])
@@ -26,22 +25,38 @@ export const SeatBooking = () => {
                 setLoading(true)
                 setError(null)
 
-                const movieRes = await fetch(`/api/v1/movies/${movieId}`)
-                const movieData = await movieRes.json()
+                let movieRes = await fetch(`/api/v1/movies/${targetMovieId}`)
+                if (!movieRes.ok) {
+                    movieRes = await fetch(`/api/movies/${targetMovieId}`)
+                }
+                if (!movieRes.ok) {
+                    movieRes = await fetch(`/api/movie/${targetMovieId}`)
+                }
 
-                if (!movieRes.ok || !movieData.movie) {
+                const movieData = await movieRes.json()
+                if (!movieRes.ok || (!movieData.movie && !movieData.data && !movieData._id)) {
                     throw new Error(movieData.message || "Failed to load movie details")
                 }
-                setMovie(movieData.movie)
 
-                const showtimesRes = await fetch(`/api/v1/showtimes?movie=${movieId}&city=${encodeURIComponent(selectedCity || "Mumbai")}`)
+                const resolvedMovie = movieData.movie || movieData.data || movieData
+                setMovie(resolvedMovie)
+
+                const cityParam = encodeURIComponent(selectedCity || "Mumbai")
+                let showtimesRes = await fetch(`/api/v1/showtimes?movieId=${targetMovieId}&movie=${targetMovieId}&city=${cityParam}`)
+                if (!showtimesRes.ok) {
+                    showtimesRes = await fetch(`/api/showtimes?movieId=${targetMovieId}&movie=${targetMovieId}&city=${cityParam}`)
+                }
+
+                if (!showtimesRes.ok) {
+                    showtimesRes = await fetch(`/api/v1/showtimes?movieId=${targetMovieId}&movie=${targetMovieId}`)
+                }
+
                 const showtimesData = await showtimesRes.json()
+                const list = showtimesData.showtimes || showtimesData.data || (Array.isArray(showtimesData) ? showtimesData : [])
 
-                if (showtimesRes.ok && Array.isArray(showtimesData.showtimes)) {
-                    setShowtimes(showtimesData.showtimes)
-                    if (showtimesData.showtimes.length > 0) {
-                        setSelectedShowtime(showtimesData.showtimes[0])
-                    }
+                if (Array.isArray(list) && list.length > 0) {
+                    setShowtimes(list)
+                    setSelectedShowtime(list[0])
                 } else {
                     setShowtimes([])
                 }
@@ -52,27 +67,27 @@ export const SeatBooking = () => {
             }
         }
 
-        if (movieId) {
+        if (targetMovieId) {
             fetchBookingData()
         }
-    }, [movieId, selectedCity])
+    }, [targetMovieId, selectedCity])
 
     const groupedByTheatre = useMemo(() => {
         const map = new Map()
         showtimes.forEach((st) => {
-            const theatreId = st.theatre?._id || st.theatre
-            if (!theatreId) return
+            const theatreObj = typeof st.theatre === "object" ? st.theatre : null
+            const theatreId = theatreObj?._id || st.theatre || "default-theatre"
 
             if (!map.has(theatreId)) {
                 map.set(theatreId, {
-                    theatre: st.theatre,
+                    theatre: theatreObj || { name: "Cinema Hall", city: selectedCity, address: selectedCity },
                     shows: []
                 })
             }
             map.get(theatreId).shows.push(st)
         })
         return Array.from(map.values())
-    }, [showtimes])
+    }, [showtimes, selectedCity])
 
     const handleSeatClick = (seat) => {
         if (seat.status !== "available") return
@@ -109,11 +124,9 @@ export const SeatBooking = () => {
             setBookingLoading(true)
             const seatNumbers = selectedSeats.map((s) => s.seatNumber)
 
-            const response = await fetch("/api/v1/bookings", {
+            let response = await fetch("/api/v1/bookings", {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
+                headers: { "Content-Type": "application/json" },
                 credentials: "include",
                 body: JSON.stringify({
                     showtimeId: selectedShowtime._id,
@@ -121,6 +134,19 @@ export const SeatBooking = () => {
                     totalAmount: selectedSeats.length * (selectedShowtime.ticketPrice || 250)
                 })
             })
+
+            if (!response.ok) {
+                response = await fetch("/api/bookings", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    credentials: "include",
+                    body: JSON.stringify({
+                        showtimeId: selectedShowtime._id,
+                        seats: seatNumbers,
+                        totalAmount: selectedSeats.length * (selectedShowtime.ticketPrice || 250)
+                    })
+                })
+            }
 
             const data = await response.json()
 
@@ -139,7 +165,6 @@ export const SeatBooking = () => {
     if (loading) {
         return (
             <div className="seat-booking-container">
-                <Navbar />
                 <div className="booking-loading-state">
                     <div className="booking-spinner"></div>
                     <p>Loading real showtimes & seating layout in {selectedCity}...</p>
@@ -151,7 +176,6 @@ export const SeatBooking = () => {
     if (error || !movie) {
         return (
             <div className="seat-booking-container">
-                <Navbar />
                 <div className="booking-error-state">
                     <p>{error || "Movie not found"}</p>
                     <button onClick={() => navigate("/")} className="booking-back-btn">
@@ -164,8 +188,6 @@ export const SeatBooking = () => {
 
     return (
         <div className="seat-booking-container">
-            <Navbar />
-
             <main className="seat-booking-wrap">
                 <header className="booking-movie-header">
                     <div className="booking-poster-box">
@@ -178,7 +200,7 @@ export const SeatBooking = () => {
                             {Array.isArray(movie.genre) ? movie.genre.join(" • ") : movie.genre} | {movie.durationMinutes} mins
                         </p>
                         <p className="booking-region-notice">
-                            Displaying real Overpass screens in <strong>{selectedCity}</strong>
+                            Displaying real screens in <strong>{selectedCity}</strong>
                         </p>
                     </div>
                 </header>
