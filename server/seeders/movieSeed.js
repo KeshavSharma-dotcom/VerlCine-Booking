@@ -23,7 +23,7 @@ const Movie = require("../models/Movie")
 const Theatre = require("../models/Theatre")
 const Showtime = require("../models/Showtime")
 const { syncCinemasFromOsm } = require("../services/theatreSyncService")
-const { fetchNowPlayingMovies } = require("../services/tmdbMovieService")
+const { fetchLiveTheatricalMovies } = require("../services/omdbMovieService")
 const geoConfig = require("../config/geoConfig")
 
 const MONGO_URI = process.env.MONGO_URL || process.env.MONGODB_URI || config?.db?.mongoUrl
@@ -71,10 +71,10 @@ const seedRealShowtimes = async () => {
             throw new Error("No physical theatres available in database")
         }
 
-        const liveMovies = await fetchNowPlayingMovies("IN")
+        const liveMovies = await fetchLiveTheatricalMovies()
 
-        if (liveMovies.length === 0) {
-            throw new Error("Failed to fetch current theatrical releases from TMDB")
+        if (!Array.isArray(liveMovies) || liveMovies.length === 0) {
+            throw new Error("Failed to fetch real-time theatrical releases from OMDb")
         }
 
         await Promise.all([
@@ -82,7 +82,13 @@ const seedRealShowtimes = async () => {
             Showtime.deleteMany({})
         ])
 
-        const insertedMovies = await Movie.insertMany(liveMovies)
+        const moviesToInsert = liveMovies.map((m, idx) => ({
+            ...m,
+            theatre: physicalTheatres[idx % physicalTheatres.length]._id,
+            theatreAdmin: adminOwner._id
+        }))
+
+        const insertedMovies = await Movie.insertMany(moviesToInsert)
 
         const showtimesToInsert = []
         const today = new Date()
@@ -121,7 +127,7 @@ const seedRealShowtimes = async () => {
 
         await Showtime.insertMany(showtimesToInsert)
 
-        console.log(`Successfully synced ${insertedMovies.length} real-world currently screening films across ${physicalTheatres.length} physical OSM cinemas.`)
+        console.log(`Successfully synced ${insertedMovies.length} real-time OMDb movies across ${physicalTheatres.length} physical OSM cinemas with ${showtimesToInsert.length} showtimes.`)
         process.exit(0)
     } catch (err) {
         console.error("Live theatrical sync failed:", err.message)

@@ -11,10 +11,7 @@ const dataSan = require("./middleware/dataSan")
 const initSocket = require("./utils/socket")
 const startReminderScheduler = require("./utils/reminderScheduler")
 
-const authRoutes = require("./routes/authRoutes")
-const movieRoutes = require("./routes/movieRoutes")
-const showTimeRoutes = require("./routes/showTimeRoutes")
-const theatreRoutes = require("./routes/theatreRoutes")
+const mainRouter = require("./routes/routes")
 
 const app = express()
 const server = http.createServer(app)
@@ -39,10 +36,7 @@ app.use(express.json({ limit: "10mb" }))
 app.use(express.urlencoded({ extended: true, limit: "10mb" }))
 app.use(dataSan)
 
-app.use("/api/auth", authRoutes)
-app.use("/api/movies", movieRoutes)
-app.use("/api/v1/showtimes", showTimeRoutes)
-app.use("/api/v1/theatres", theatreRoutes)
+app.use("/api",mainRouter)
 
 app.use((req, res, next) => {
     const error = new Error(`Not Found - ${req.originalUrl}`)
