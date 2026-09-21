@@ -1,0 +1,224 @@
+.cine-footer-root {
+  position: relative;
+  z-index: 20;
+  width: 100%;
+  margin-top: 5rem;
+  background-color: var(--color-bg-primary, #0A0F1D);
+  border-top: 1px solid var(--color-border-subtle, #24304D);
+  color: #94a3b8;
+  font-family: inherit;
+  clear: both;
+}
+
+.cine-footer-container {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 4rem 2rem 2.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 3.5rem;
+  box-sizing: border-box;
+}
+
+.cine-footer-main-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr 1.5fr;
+  gap: 3rem;
+  align-items: flex-start;
+}
+
+.cine-footer-brand-pane {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.cine-footer-logo {
+  font-size: 1.85rem;
+  font-weight: 900;
+  font-style: italic;
+  letter-spacing: 0.04em;
+  color: var(--color-primary-light, #93C5FD);
+  text-decoration: none;
+  display: inline-block;
+}
+
+.cine-footer-logo span {
+  color: var(--color-accent-coral, #FF6B00);
+}
+
+.cine-footer-desc {
+  font-size: 0.85rem;
+  line-height: 1.6;
+  color: #64748b;
+  margin: 0;
+  max-width: 300px;
+}
+
+.cine-footer-location-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  background: var(--color-bg-surface, #121829);
+  border: 1px solid var(--color-border-subtle, #24304D);
+  padding: 0.35rem 0.85rem;
+  border-radius: 9999px;
+  font-size: 0.775rem;
+  color: #94a3b8;
+  width: fit-content;
+}
+
+.cine-footer-location-pill strong {
+  color: var(--color-accent-coral, #FF6B00);
+}
+
+.cine-footer-col-header {
+  font-size: 0.825rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #ffffff;
+  margin: 0 0 1.25rem 0;
+}
+
+.cine-footer-links {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.cine-footer-links li a {
+  color: #94a3b8;
+  text-decoration: none;
+  font-size: 0.85rem;
+  font-weight: 500;
+  transition: color 0.2s ease;
+}
+
+.cine-footer-links li a:hover {
+  color: var(--color-accent-coral, #FF6B00);
+}
+
+.cine-footer-social-col {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.cine-footer-social-sub {
+  font-size: 0.825rem;
+  color: #64748b;
+  margin: 0 0 0.5rem 0;
+  line-height: 1.5;
+}
+
+.cine-footer-social-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.cine-social-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 10px;
+  background: var(--color-bg-surface, #121829);
+  border: 1px solid var(--color-border-subtle, #24304D);
+  color: #94a3b8;
+  transition: all 0.2s ease;
+  text-decoration: none;
+}
+
+.cine-social-btn svg {
+  width: 1.15rem;
+  height: 1.15rem;
+}
+
+.cine-social-btn:hover {
+  transform: translateY(-2px);
+  background: var(--color-bg-elevated, #1B243B);
+}
+
+.cine-social-btn.instagram:hover {
+  color: #e1306c;
+  border-color: #e1306c;
+}
+
+.cine-social-btn.facebook:hover {
+  color: #1877f2;
+  border-color: #1877f2;
+}
+
+.cine-social-btn.youtube:hover {
+  color: #ff0000;
+  border-color: #ff0000;
+}
+
+.cine-social-btn.x-twitter:hover {
+  color: #ffffff;
+  border-color: #ffffff;
+}
+
+.cine-footer-bottom-bar {
+  border-top: 1px solid var(--color-border-subtle, #24304D);
+  padding-top: 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  font-size: 0.8rem;
+  color: #64748b;
+}
+
+.cine-footer-bottom-bar p {
+  margin: 0;
+}
+
+.cine-footer-security-tags {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.cine-tag-divider {
+  color: #475569;
+}
+
+@media (max-width: 1024px) {
+  .cine-footer-main-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 2.5rem;
+  }
+
+  .cine-footer-brand-pane {
+    grid-column: span 2;
+  }
+}
+
+@media (max-width: 640px) {
+  .cine-footer-container {
+    padding: 3rem 1.25rem 2rem;
+    gap: 2rem;
+  }
+
+  .cine-footer-main-grid {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+
+  .cine-footer-brand-pane {
+    grid-column: span 1;
+  }
+
+  .cine-footer-bottom-bar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

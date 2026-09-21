@@ -1,10 +1,16 @@
 import React, { useEffect, useState, useMemo } from "react"
-import { Link } from "react-router-dom"
 import { useSelector, useDispatch } from "react-redux"
 import { fetchMovies } from "../redux/thunks/movieThunks"
 import { fetchNearbyTheatres, fetchTheatreCities } from "../redux/thunks/theatreThunks"
 import Navbar from "../components/NavBar"
-import CitySelectorModal from "../components/city/city"
+import { CitySelectorModal } from "../components/city/city"
+import { Footer } from "../components/main/Footer"
+import {
+    HomeAnimatedBg,
+    HomeSpotlightBanner,
+    HomeFeedControls,
+    HomeCatalogGrid
+} from "../components/home/home"
 import "../assets/styles/animatedBg.css"
 import "../assets/styles/home.css"
 
@@ -26,10 +32,10 @@ export const Home = () => {
     useEffect(() => {
         dispatch(
             fetchNearbyTheatres({
-                lat: userLocation?.lat || 18.9690,
-                lng: userLocation?.lng || 72.8194,
-                radius: userLocation?.radiusKm || 50,
-                city: selectedCity || "Mumbai"
+                lat: userLocation?.lat || 28.6139,
+                lng: userLocation?.lng || 77.2090,
+                radius: userLocation?.radiusKm || 40,
+                city: selectedCity || "Delhi NCR"
             })
         )
     }, [dispatch, selectedCity, userLocation?.lat, userLocation?.lng, userLocation?.radiusKm])
@@ -96,150 +102,45 @@ export const Home = () => {
                 onClose={() => setIsCityModalOpen(false)}
             />
 
-            <div className="animated-bg-viewport">
-                <div className="animated-quad-canvas">
-                    {quadPosters.map((url, idx) => (
-                        <div key={idx} className="animated-quad-tile">
-                            <img src={url} alt="" className="animated-quad-img" />
-                        </div>
-                    ))}
-                </div>
-                <div className="animated-bg-overlay" />
-            </div>
+            <HomeAnimatedBg quadPosters={quadPosters} />
 
             <Navbar activeTab={activeTab} setActiveTab={handleTabChange} />
 
             <main className="home-content-wrap">
-                {featuredSpotlight && (
-                    <section className="home-spotlight-banner">
-                        <div
-                            className="home-spotlight-backdrop"
-                            style={{ backgroundImage: `url(${featuredSpotlight.posterUrl})` }}
-                        />
-                        <div className="home-spotlight-gradient-overlay" />
-                        <div className="home-spotlight-info">
-                            <div className="home-spotlight-tag">
-                                <span className="home-spotlight-pill">Featured Tonight</span>
-                                <span className="home-spotlight-rating">★ {featuredSpotlight.rating}</span>
-                                <span className="home-spotlight-time">{featuredSpotlight.durationMinutes} mins</span>
-                            </div>
-                            <h1 className="home-spotlight-title">{featuredSpotlight.title}</h1>
-                            <p className="home-spotlight-desc">{featuredSpotlight.description}</p>
-                            <div className="home-spotlight-actions">
-                                <Link
-                                    to={isAuthenticated ? `/seat-booking/${featuredSpotlight._id}` : "/register"}
-                                    className="home-spotlight-book-btn"
-                                >
-                                    Book Seats
-                                </Link>
-                                <span className="home-spotlight-city-tag">
-                                    Now Playing in {selectedCity}
-                                </span>
-                            </div>
-                        </div>
-                    </section>
-                )}
+                {/* <HomeSpotlightBanner
+                    featuredSpotlight={featuredSpotlight}
+                    isAuthenticated={isAuthenticated}
+                    selectedCity={selectedCity}
+                /> */}
 
-                <section className="home-feed-controls">
-                    <div className="home-feed-header-row">
-                        <div className="home-tab-pill-group">
-                            <button
-                                onClick={() => handleTabChange("all")}
-                                className={`home-feed-tab-btn ${activeTab === "all" ? "active" : ""}`}
-                            >
-                                All Releases
-                            </button>
-                            <button
-                                onClick={() => handleTabChange("movies")}
-                                className={`home-feed-tab-btn ${activeTab === "movies" ? "active" : ""}`}
-                            >
-                                Movies
-                            </button>
-                            <button
-                                onClick={() => handleTabChange("shows")}
-                                className={`home-feed-tab-btn ${activeTab === "shows" ? "active" : ""}`}
-                            >
-                                Live Standups & Shows
-                            </button>
-                        </div>
+                <HomeFeedControls
+                    activeTab={activeTab}
+                    onTabChange={handleTabChange}
+                    selectedCity={selectedCity}
+                    onOpenCityModal={() => setIsCityModalOpen(true)}
+                    availableGenres={availableGenres}
+                    selectedGenre={selectedGenre}
+                    onSelectGenre={setSelectedGenre}
+                />
 
-                        <button
-                            className="home-location-indicator-btn"
-                            onClick={() => setIsCityModalOpen(true)}
-                        >
-                            <span className="home-pin-icon">📍</span>
-                            <span>{selectedCity}</span>
-                            <span className="home-change-badge">Change</span>
-                        </button>
-                    </div>
-
-                    <div className="home-genre-scroll-bar">
-                        {availableGenres.map((genre) => (
-                            <button
-                                key={genre}
-                                onClick={() => setSelectedGenre(genre)}
-                                className={`home-genre-chip ${selectedGenre === genre ? "active" : ""}`}
-                            >
-                                {genre}
-                            </button>
-                        ))}
-                    </div>
-                </section>
-
-                <section className="home-catalog-section">
-                    {moviesLoading ? (
-                        <div className="home-loading-state">
-                            <div className="home-spinner"></div>
-                            <p>Loading titles in {selectedCity}...</p>
-                        </div>
-                    ) : moviesError ? (
-                        <div className="home-error-state">
-                            <p>{moviesError}</p>
-                        </div>
-                    ) : filteredCatalog.length === 0 ? (
-                        <div className="home-empty-state">
-                            <p>No titles currently available matching this category filter.</p>
-                        </div>
-                    ) : (
-                        <div className="home-movies-grid">
-                            {filteredCatalog.map((item) => (
-                                <Link
-                                    key={item._id}
-                                    to={isAuthenticated ? `/seat-booking/${item._id}` : "/register"}
-                                    className="home-movie-card"
-                                >
-                                    <div className="home-movie-img-container">
-                                        <img
-                                            src={item.posterUrl}
-                                            alt={item.title}
-                                            className="home-movie-img"
-                                            loading="lazy"
-                                        />
-                                        <span className="home-movie-rating-badge">{item.rating}</span>
-                                        <div className="home-card-hover-overlay">
-                                            <span className="home-card-quick-book">Select Seats</span>
-                                        </div>
-                                    </div>
-                                    <div className="home-movie-content">
-                                        <span className="home-movie-genre">
-                                            {Array.isArray(item.genre) ? item.genre.slice(0, 2).join(" • ") : item.genre}
-                                        </span>
-                                        <h3 className="home-movie-title">{item.title}</h3>
-                                        <div className="home-movie-footer">
-                                            <span className="home-movie-duration">{item.durationMinutes}m</span>
-                                            <span className="home-movie-view-link">View Showtimes</span>
-                                        </div>
-                                    </div>
-                                </Link>
-                            ))}
-                        </div>
-                    )}
-                </section>
+                <HomeCatalogGrid
+                    loading={moviesLoading}
+                    error={moviesError}
+                    filteredCatalog={filteredCatalog}
+                    selectedCity={selectedCity}
+                    isAuthenticated={isAuthenticated}
+                />
             </main>
 
-            <footer className="home-footer">
-                <p>&copy; {new Date().getFullYear()} CineVerl Inc. {selectedCity}. All rights reserved.</p>
-            </footer>
+            <Footer
+                selectedCity={selectedCity}
+                socialLinks={{
+                    instagram: "https://instagram.com/yourhandle",
+                    facebook: "https://facebook.com/yourhandle",
+                    youtube: "https://youtube.com/@yourchannel",
+                    x: "https://x.com/yourhandle"
+                }}
+            />
         </div>
     )
 }

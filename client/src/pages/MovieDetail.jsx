@@ -1,17 +1,30 @@
-import React, { useEffect, useState, useMemo } from "react"
+import React, { useEffect, useState, useMemo, useRef } from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import { useSelector } from "react-redux"
-import CitySelectorModal from "../components/city/city"
+import { CitySelectorModal } from "../components/city/city"
+import { Footer } from "../components/main/Footer"
+import {
+    MovieHero,
+    MovieAbout,
+    MovieCastCrew,
+    MovieTheatresSection
+} from "../components/movie/movie"
+import "../assets/styles/animatedBg.css"
 import "../assets/styles/movieDetail.css"
 
 export const MovieDetail = () => {
     const { id } = useParams()
     const navigate = useNavigate()
+    const theatresRef = useRef(null)
 
-    const { selectedCity, userLocation } = useSelector((state) => state.theatre)
+    const cityState = useSelector((state) => state.city || {})
+    const theatreState = useSelector((state) => state.theatre || {})
+
+    const selectedCity = cityState.selectedCity || theatreState.selectedCity || "Jaipur"
+    const userLocation = cityState.userLocation || theatreState.userLocation || { lat: 26.9124, lng: 75.7873 }
 
     const [movie, setMovie] = useState(null)
-    const [showtimes, setShowtimes] = useState([])
+    const [showtimesData, setShowtimesData] = useState([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState(null)
     const [isCityModalOpen, setIsCityModalOpen] = useState(false)
@@ -22,31 +35,47 @@ export const MovieDetail = () => {
                 setLoading(true)
                 setError(null)
 
-                // 1. Fetch movie metadata from backend / OMDb
                 let movieRes = await fetch(`/api/v1/movies/${id}`)
                 if (!movieRes.ok) movieRes = await fetch(`/api/movies/${id}`)
-                const movieData = await movieRes.json()
-                const resolvedMovie = movieData.movie || movieData.data || movieData
+                if (!movieRes.ok) movieRes = await fetch(`/api/movie/${id}`)
+
+                const movieJson = await movieRes.json()
+                const resolvedMovie = movieJson.movie || movieJson.data || movieJson
                 setMovie(resolvedMovie)
 
-                // 2. Fetch showtimes with city & distance coordinates
-                const lat = userLocation?.lat || ""
-                const lng = userLocation?.lng || ""
-                const cityParam = encodeURIComponent(selectedCity || "Mumbai")
+                const queryParams = new URLSearchParams({
+                    movieId: id,
+                    city: selectedCity
+                })
 
-                let showRes = await fetch(
-                    `/api/v1/showtimes?movieId=${id}&city=${cityParam}&lat=${lat}&lng=${lng}`
-                )
-                if (!showRes.ok) {
-                    showRes = await fetch(
-                        `/api/showtimes?movieId=${id}&city=${cityParam}&lat=${lat}&lng=${lng}`
-                    )
+                if (userLocation?.lat && userLocation?.lng) {
+                    queryParams.append("lat", String(userLocation.lat))
+                    queryParams.append("lng", String(userLocation.lng))
                 }
-                const showData = await showRes.json()
-                const list = showData.showtimes || showData.data || (Array.isArray(showData) ? showData : [])
-                setShowtimes(Array.isArray(list) ? list : [])
+
+                let showRes = await fetch(`/api/v1/showtimes?${queryParams.toString()}`)
+                if (!showRes.ok) showRes = await fetch(`/api/showtimes?${queryParams.toString()}`)
+
+                const showJson = await showRes.json()
+
+                if (Array.isArray(showJson.groupedTheatres)) {
+                    const normalized = showJson.groupedTheatres.map((gt) => {
+                        const allShows = []
+                        Object.values(gt.screens || {}).forEach((slots) => {
+                            allShows.push(...slots)
+                        })
+                        return {
+                            theatre: gt.theatre,
+                            shows: allShows
+                        }
+                    })
+                    setShowtimesData(normalized)
+                } else {
+                    const rawShows = showJson.showtimes || showJson.data || (Array.isArray(showJson) ? showJson : [])
+                    setShowtimesData(rawShows)
+                }
             } catch (err) {
-                setError(err.message || "Failed to load movie")
+                setError(err.message || "Failed to load movie information")
             } finally {
                 setLoading(false)
             }
@@ -55,10 +84,13 @@ export const MovieDetail = () => {
         if (id) fetchDetailsAndShowtimes()
     }, [id, selectedCity, userLocation?.lat, userLocation?.lng])
 
-    // Group showtimes by physical theatre and sort by distance
     const groupedTheatres = useMemo(() => {
+        if (showtimesData.length > 0 && showtimesData[0]?.theatre && Array.isArray(showtimesData[0]?.shows)) {
+            return showtimesData
+        }
+
         const map = new Map()
-        showtimes.forEach((st) => {
+        showtimesData.forEach((st) => {
             const theatreObj = typeof st.theatre === "object" ? st.theatre : null
             const theatreId = theatreObj?._id || st.theatre || "venue"
 
@@ -76,18 +108,22 @@ export const MovieDetail = () => {
             const distB = b.theatre.distanceKm ?? 9999
             return distA - distB
         })
-    }, [showtimes, selectedCity])
+    }, [showtimesData, selectedCity])
 
-    const handleSelectShowtime = (showtimeId) => {
-        navigate(`/seat-booking/${showtimeId}`)
+    const handleSmoothScrollToTheatres = () => {
+        theatresRef.current?.scrollIntoView({ behavior: "smooth" })
+    }
+
+    const handleSelectSlot = (showtimeId) => {
+        navigate(`/booking/${showtimeId}`)
     }
 
     if (loading) {
         return (
-            <div className="movie-detail-page">
-                <div className="movie-detail-loading">
-                    <div className="movie-detail-spinner"></div>
-                    <p>Loading full movie details & screening showtimes...</p>
+            <div className="movie-detail-container">
+                <div className="home-loading-state" style={{ margin: "auto", textAlign: "center", padding: "8rem 0" }}>
+                    <div className="home-spinner" />
+                    <p>Loading details & showtimes...</p>
                 </div>
             </div>
         )
@@ -95,231 +131,50 @@ export const MovieDetail = () => {
 
     if (error || !movie) {
         return (
-            <div className="movie-detail-page">
-                <div className="movie-detail-error">
+            <div className="movie-detail-container">
+                <div className="home-error-state" style={{ margin: "auto", textAlign: "center", padding: "8rem 0" }}>
                     <p>{error || "Movie not found"}</p>
-                    <button onClick={() => navigate("/")} className="movie-detail-back-btn">
-                        Back to Catalog
+                    <button
+                        onClick={() => navigate("/")}
+                        className="movie-detail-book-cta"
+                        style={{ marginTop: "1rem" }}
+                    >
+                        Back to Home
                     </button>
                 </div>
             </div>
         )
     }
 
-    const castList = Array.isArray(movie.cast)
-        ? movie.cast
-        : typeof movie.cast === "string"
-            ? movie.cast.split(",").map((s) => s.trim())
-            : []
-
-    const genreList = Array.isArray(movie.genre)
-        ? movie.genre
-        : typeof movie.genre === "string"
-            ? movie.genre.split(",").map((g) => g.trim())
-            : []
-
     return (
-        <div className="movie-detail-page">
+        <div className="movie-detail-container">
             <CitySelectorModal
                 isOpen={isCityModalOpen}
                 onClose={() => setIsCityModalOpen(false)}
             />
 
-            <div
-                className="movie-detail-hero"
-                style={{
-                    backgroundImage: `linear-gradient(to right, rgba(7, 11, 20, 0.96) 20%, rgba(7, 11, 20, 0.85) 60%, rgba(7, 11, 20, 0.45) 100%), url(${movie.posterUrl})`
-                }}
-            >
-                <div className="movie-detail-hero-content">
-                    <div className="movie-detail-poster-wrap">
-                        <img
-                            src={movie.posterUrl}
-                            alt={movie.title}
-                            referrerPolicy="no-referrer"
-                            crossOrigin="anonymous"
-                            onError={(e) => {
-                                e.target.onerror = null
-                                e.target.src = "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=800&q=80"
-                            }}
-                            className="movie-detail-poster"
-                        />
-                    </div>
+            <MovieHero
+                movie={movie}
+                selectedCity={selectedCity}
+                onOpenCityModal={() => setIsCityModalOpen(true)}
+                onBookSeatsClick={handleSmoothScrollToTheatres}
+            />
 
-                    <div className="movie-detail-meta">
-                        <div className="movie-detail-badge-group">
-                            <span className="movie-detail-badge rating">★ {movie.imdbRating || movie.rating || "PG-13"}</span>
-                            <span className="movie-detail-badge duration">{movie.durationMinutes || 120} mins</span>
-                            {movie.releasedYear && <span className="movie-detail-badge year">{movie.releasedYear}</span>}
-                            <span className="movie-detail-badge active-status">Now Screening</span>
-                        </div>
+            <main className="movie-detail-body">
+                <MovieAbout movie={movie} />
 
-                        <h1 className="movie-detail-title">{movie.title}</h1>
+                <MovieCastCrew movie={movie} />
 
-                        <div className="movie-detail-genres">
-                            {genreList.map((g) => (
-                                <span key={g} className="movie-detail-genre-chip">
-                                    {g}
-                                </span>
-                            ))}
-                        </div>
-
-                        <p className="movie-detail-description">{movie.plot || movie.description}</p>
-
-                        <div className="movie-detail-action-row">
-                            <a href="#showtimes-section" className="movie-detail-cta-btn">
-                                View Theatres & Showtimes
-                            </a>
-                            <button
-                                onClick={() => setIsCityModalOpen(true)}
-                                className="movie-detail-location-btn"
-                            >
-                                <span className="loc-pin">📍</span>
-                                <span>{selectedCity}</span>
-                                <span className="loc-change">Change</span>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <main className="movie-detail-main">
-                <section className="omdb-info-grid">
-                    <div className="omdb-info-card">
-                        <h3 className="omdb-section-heading">Cast & Crew</h3>
-                        <div className="omdb-key-val-list">
-                            {movie.director && (
-                                <div className="omdb-key-val-item">
-                                    <span className="key-label">Director</span>
-                                    <span className="key-value">{movie.director}</span>
-                                </div>
-                            )}
-                            {movie.writer && (
-                                <div className="omdb-key-val-item">
-                                    <span className="key-label">Writer(s)</span>
-                                    <span className="key-value">{movie.writer}</span>
-                                </div>
-                            )}
-                            {castList.length > 0 && (
-                                <div className="omdb-key-val-item">
-                                    <span className="key-label">Starring</span>
-                                    <span className="key-value">{castList.join(", ")}</span>
-                                </div>
-                            )}
-                            {movie.language && (
-                                <div className="omdb-key-val-item">
-                                    <span className="key-label">Language</span>
-                                    <span className="key-value">{movie.language}</span>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-
-                    <div className="omdb-info-card">
-                        <h3 className="omdb-section-heading">Box Office & Acclaim</h3>
-                        <div className="omdb-key-val-list">
-                            {movie.boxOffice && (
-                                <div className="omdb-key-val-item">
-                                    <span className="key-label">Box Office</span>
-                                    <span className="key-value">{movie.boxOffice}</span>
-                                </div>
-                            )}
-                            {movie.metascore && (
-                                <div className="omdb-key-val-item">
-                                    <span className="key-label">Metascore</span>
-                                    <span className="key-value metascore-badge">{movie.metascore} / 100</span>
-                                </div>
-                            )}
-                            {movie.awards && movie.awards !== "N/A" && (
-                                <div className="omdb-key-val-item">
-                                    <span className="key-label">Awards</span>
-                                    <span className="key-value awards-text">{movie.awards}</span>
-                                </div>
-                            )}
-                        </div>
-
-                        {Array.isArray(movie.ratings) && movie.ratings.length > 0 && (
-                            <div className="omdb-ratings-row">
-                                {movie.ratings.map((r) => (
-                                    <div key={r.Source} className="critic-rating-pill">
-                                        <span className="rating-source">{r.Source}</span>
-                                        <span className="rating-score">{r.Value}</span>
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-                    </div>
-                </section>
-
-                <section id="showtimes-section" className="movie-detail-venues-section">
-                    <div className="movie-detail-venues-header">
-                        <div>
-                            <h2 className="movie-detail-venues-heading">Select Cinema & Show Time in {selectedCity}</h2>
-                            <span className="movie-detail-venues-subtext">
-                                Theatres sorted by proximity to your chosen location
-                            </span>
-                        </div>
-                        <button
-                            onClick={() => setIsCityModalOpen(true)}
-                            className="movie-detail-switch-city-link"
-                        >
-                            Change Region
-                        </button>
-                    </div>
-
-                    {groupedTheatres.length === 0 ? (
-                        <div className="movie-detail-venues-empty">
-                            <p>No screening sessions found in <strong>{selectedCity}</strong> for this movie.</p>
-                            <button onClick={() => setIsCityModalOpen(true)} className="select-city-btn">
-                                Select Different City
-                            </button>
-                        </div>
-                    ) : (
-                        <div className="movie-detail-theatres-grid">
-                            {groupedTheatres.map(({ theatre, shows }) => (
-                                <div key={theatre._id || Math.random()} className="movie-detail-theatre-card">
-                                    <div className="theatre-card-top">
-                                        <h3 className="theatre-card-name">{theatre.name}</h3>
-                                        {theatre.distanceKm !== undefined && (
-                                            <span className="theatre-card-distance">
-                                                📍 {theatre.distanceKm} km away
-                                            </span>
-                                        )}
-                                    </div>
-                                    <p className="theatre-card-address">{theatre.address}</p>
-
-                                    <div className="theatre-card-shows-container">
-                                        <span className="theatre-card-shows-label">Select Showtime:</span>
-                                        <div className="theatre-card-shows-grid">
-                                            {shows.map((show) => {
-                                                const time = new Date(show.startTime).toLocaleTimeString([], {
-                                                    hour: "2-digit",
-                                                    minute: "2-digit"
-                                                })
-                                                return (
-                                                    <button
-                                                        key={show._id}
-                                                        onClick={() => handleSelectShowtime(show._id)}
-                                                        className="theatre-card-slot-btn"
-                                                    >
-                                                        <span className="slot-btn-time">{time}</span>
-                                                        <span className="slot-btn-price">₹{show.ticketPrice || 250}</span>
-                                                        <span className="slot-btn-screen">Screen {show.screenNumber || 1}</span>
-                                                    </button>
-                                                )
-                                            })}
-                                        </div>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    )}
-                </section>
+                <MovieTheatresSection
+                    theatresRef={theatresRef}
+                    groupedTheatres={groupedTheatres}
+                    selectedCity={selectedCity}
+                    onOpenCityModal={() => setIsCityModalOpen(true)}
+                    onSelectSlot={handleSelectSlot}
+                />
             </main>
 
-            <footer className="movie-detail-footer">
-                <p>&copy; {new Date().getFullYear()} CineVerl Inc. {selectedCity}. All rights reserved.</p>
-            </footer>
+            <Footer selectedCity={selectedCity} />
         </div>
     )
 }

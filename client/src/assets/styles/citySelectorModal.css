@@ -1,20 +1,23 @@
 :root {
-    --modal-bg: var(--bg-card, #ffffff);
-    --modal-overlay: rgba(10, 15, 29, 0.78);
-    --modal-text-primary: var(--text-primary, #1e293b);
-    --modal-text-secondary: var(--text-secondary, #64748b);
-    --modal-border: var(--border-color, #e2e8f0);
-    --modal-accent: var(--accent-blue, #3b82f6);
-    --modal-accent-hover: var(--accent-blue-hover, #2563eb);
-    --modal-card-bg: var(--bg-secondary, #f8faff);
-    --modal-card-hover: var(--bg-hover, #edf3fe);
+    --modal-bg: var(--color-bg-surface, #121829);
+    --modal-overlay: var(--color-bg-overlay, rgba(10, 15, 29, 0.85));
+    --modal-text-primary: var(--color-text-primary, #f8fafc);
+    --modal-text-secondary: var(--color-text-secondary, #94a3b8);
+    --modal-text-muted: var(--color-text-muted, #64748b);
+    --modal-border: var(--color-border-subtle, #24304d);
+    --modal-border-focus: var(--color-border-focus, #3b82f6);
+    --modal-accent: var(--color-primary, #3b82f6);
+    --modal-accent-hover: var(--color-primary-hover, #2563eb);
+    --modal-highlight: var(--color-accent-coral, #ff6b00);
+    --modal-card-bg: var(--color-bg-elevated, #1b243b);
+    --modal-card-hover: rgba(59, 130, 246, 0.12);
 }
 
 .city-modal-overlay {
     position: fixed;
     inset: 0;
     background-color: var(--modal-overlay);
-    backdrop-filter: blur(8px);
+    backdrop-filter: blur(10px);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -30,7 +33,7 @@
     max-height: 88vh;
     border-radius: 16px;
     border: 1px solid var(--modal-border);
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
     display: flex;
     flex-direction: column;
     padding: 1.75rem 2rem;
@@ -86,7 +89,7 @@
     font-size: 0.95rem;
     border: 1.5px solid var(--modal-border);
     border-radius: 10px;
-    background-color: var(--modal-bg);
+    background-color: var(--modal-card-bg);
     color: var(--modal-text-primary);
     outline: none;
     transition: all 0.15s ease;
@@ -94,7 +97,7 @@
 
 .city-search-input:focus {
     border-color: var(--modal-accent);
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
 }
 
 .city-search-clear {
@@ -142,6 +145,7 @@
     margin-bottom: 1rem;
 }
 
+/* Popular Cities Grid */
 .city-popular-grid {
     display: grid;
     grid-template-columns: repeat(6, 1fr);
@@ -163,7 +167,7 @@
 
 .city-popular-card {
     background: var(--modal-card-bg);
-    border: 1.5px solid transparent;
+    border: 1.5px solid var(--modal-border);
     border-radius: 14px;
     padding: 0.85rem 0.5rem 0.75rem;
     display: flex;
@@ -176,27 +180,42 @@
 
 .city-popular-card:hover {
     background: var(--modal-card-hover);
+    border-color: var(--modal-border-focus);
     transform: translateY(-2px);
 }
 
 .city-popular-card.selected {
-    border-color: var(--modal-accent);
-    background: var(--modal-card-hover);
+    border-color: var(--modal-highlight);
+    background: rgba(255, 107, 0, 0.12);
 }
 
 .city-popular-icon-box {
-    width: 52px;
-    height: 52px;
+    width: 44px;
+    height: 44px;
     display: flex;
     align-items: center;
     justify-content: center;
     color: var(--modal-accent);
     margin-bottom: 0.4rem;
+    transition: color 0.15s ease;
+}
+
+.city-popular-card:hover .city-popular-icon-box {
+    color: var(--color-primary-light, #93c5fd);
+}
+
+.city-popular-card.selected .city-popular-icon-box {
+    color: var(--modal-highlight);
 }
 
 .landmark-svg {
-    width: 100%;
-    height: 100%;
+    width: 32px;
+    height: 32px;
+    stroke: currentColor;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    vector-effect: non-scaling-stroke;
 }
 
 .city-popular-name {
@@ -206,6 +225,12 @@
     text-align: center;
 }
 
+.city-popular-card.selected .city-popular-name {
+    color: var(--modal-highlight);
+    font-weight: 700;
+}
+
+/* Alphabet Filter Bar */
 .city-alphabet-bar {
     display: flex;
     flex-wrap: wrap;
@@ -220,7 +245,7 @@
     border: none;
     font-size: 0.9rem;
     font-weight: 700;
-    color: var(--modal-text-secondary);
+    color: var(--modal-text-muted);
     cursor: pointer;
     padding: 0.2rem 0.45rem;
     border-radius: 4px;
@@ -233,16 +258,17 @@
 }
 
 .alphabet-letter-btn.active {
-    color: var(--modal-accent);
-    border-bottom: 2px solid var(--modal-accent);
+    color: var(--modal-highlight);
+    border-bottom: 2px solid var(--modal-highlight);
     border-radius: 0;
 }
 
 .alphabet-letter-btn.disabled {
-    color: var(--modal-border);
+    color: rgba(100, 116, 139, 0.35);
     cursor: not-allowed;
 }
 
+/* Alphabet City Grid */
 .city-alpha-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -260,7 +286,7 @@
     border: none;
     text-align: left;
     font-size: 0.95rem;
-    color: var(--modal-text-primary);
+    color: var(--modal-text-secondary);
     cursor: pointer;
     padding: 0.35rem 0;
     transition: color 0.15s ease;
@@ -271,12 +297,12 @@
 }
 
 .city-name-btn.active {
-    color: var(--modal-accent);
+    color: var(--modal-highlight);
     font-weight: 700;
 }
 
 .city-no-match {
-    color: var(--modal-text-secondary);
+    color: var(--modal-text-muted);
     font-size: 0.95rem;
 }
 

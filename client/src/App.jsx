@@ -34,7 +34,9 @@ export default function App() {
       <Navbar />
       <Routes>
         <Route path="/" element={<Home />} />
+
         <Route path="/movie/:id" element={<MovieDetail />} />
+        <Route path="/movies/:id" element={<MovieDetail />} />
 
         <Route element={<GuestRoute />}>
           <Route path="/login" element={<Login />} />
@@ -42,8 +44,8 @@ export default function App() {
         </Route>
 
         <Route element={<ProtectedRoute />}>
-          <Route path="/seat-booking/:movieId" element={<SeatBooking />} />
           <Route path="/booking/:showtimeId" element={<SeatBooking />} />
+          <Route path="/seat-booking/:showtimeId" element={<SeatBooking />} />
         </Route>
 
         <Route element={<AdminRoute />}>

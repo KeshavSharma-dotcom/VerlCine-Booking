@@ -1,5 +1,6 @@
 import { createSlice } from "@reduxjs/toolkit"
 import { fetchNearbyTheatres, fetchTheatreCities } from "../thunks/theatreThunks"
+import { setCitySelection } from "./citySlice"
 
 const initialState = {
     theatres: [],
@@ -55,6 +56,15 @@ export const theatreSlice = createSlice({
             .addCase(fetchTheatreCities.fulfilled, (state, action) => {
                 if (Array.isArray(action.payload) && action.payload.length > 0) {
                     state.cities = action.payload
+                }
+            })
+            .addCase(setCitySelection, (state, action) => {
+                const { city, lat, lng } = action.payload
+                state.selectedCity = city
+                state.userLocation = {
+                    lat: lat || state.userLocation.lat,
+                    lng: lng || state.userLocation.lng,
+                    radiusKm: 40
                 }
             })
     }
