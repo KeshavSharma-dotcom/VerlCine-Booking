@@ -8,7 +8,8 @@
     "start": "nodemon server.js",
     "seed:movies": "node seeders/movieSeed.js",
     "seed:shows": "node seeders/showSeed.js",
-    "seed:all": "node seeders/movieSeed.js && node seeders/showSeed.js"
+    "seed:all": "node seeders/movieSeed.js && node seeders/showSeed.js",
+    "seed:showtimes": "node seeders/showTimeSeed.js"
   },
   "keywords": [],
   "author": "",
