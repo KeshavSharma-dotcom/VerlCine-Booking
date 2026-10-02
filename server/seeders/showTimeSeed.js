@@ -1,18 +1,3 @@
-const path = require("path")
-const fs = require("fs")
-
-const envPaths = [
-    path.resolve(__dirname, "../../.env"),
-    path.resolve(__dirname, "../.env"),
-    path.resolve(process.cwd(), ".env")
-]
-
-for (const envPath of envPaths) {
-    if (fs.existsSync(envPath)) {
-        require("dotenv").config({ path: envPath })
-        break
-    }
-}
 require("dotenv").config()
 
 const mongoose = require("mongoose")
@@ -21,7 +6,7 @@ const Movie = require("../models/Movie")
 const Theatre = require("../models/Theatre")
 const Showtime = require("../models/Showtime")
 
-const MONGO_URI = process.env.MONGO_URL 
+const MONGO_URI = process.env.MONGO_URL
 const TIME_WINDOWS = [
     { name: "Morning", hours: [9, 10, 11], basePrice: 200 },
     { name: "Matinee", hours: [13, 14, 15], basePrice: 260 },

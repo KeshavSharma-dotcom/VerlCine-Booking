@@ -1,15 +1,18 @@
 const OMDB_API_KEY = process.env.OMDB_KEY
 
 const CURRENT_THEATRE_QUERIES = [
-    "Dune",
-    "Gladiator",
-    "Deadpool",
-    "Moana",
-    "Wicked",
-    "Alien",
-    "Venom",
-    "Spider-Man",
-    "Interstellar"
+    "Resident Evil",
+    "Practical Magic 2",
+    "By Any Means",
+    "Hanuman Ansh",
+    "The Vvaan - Force of the Forrest",
+    "Drishyam The Conclusion",
+    "Runner",
+    "Hope",
+    "The Uprising",
+    "Fall 2: Deadpoint",
+    "Shaun the Sheep: The Beast of Mossy Bottom",
+    "Mirzapur: The Movie"
 ]
 
 const parseDuration = (runtimeStr) => {
