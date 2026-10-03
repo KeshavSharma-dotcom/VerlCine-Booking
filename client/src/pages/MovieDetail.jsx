@@ -40,6 +40,7 @@ export const MovieDetail = () => {
                 if (!movieRes.ok) movieRes = await fetch(`/api/movie/${id}`)
 
                 const movieJson = await movieRes.json()
+                console.log("Movie json : ", movieJson)
                 const resolvedMovie = movieJson.movie || movieJson.data || movieJson
                 setMovie(resolvedMovie)
 
@@ -57,7 +58,7 @@ export const MovieDetail = () => {
                 if (!showRes.ok) showRes = await fetch(`/api/showtimes?${queryParams.toString()}`)
 
                 const showJson = await showRes.json()
-
+                console.log("Show json : ", showJson)
                 if (Array.isArray(showJson.groupedTheatres)) {
                     const normalized = showJson.groupedTheatres.map((gt) => {
                         const allShows = []
@@ -74,6 +75,7 @@ export const MovieDetail = () => {
                     const rawShows = showJson.showtimes || showJson.data || (Array.isArray(showJson) ? showJson : [])
                     setShowtimesData(rawShows)
                 }
+
             } catch (err) {
                 setError(err.message || "Failed to load movie information")
             } finally {

@@ -12,7 +12,7 @@ import Register from "./pages/auth/Register"
 import ProtectedRoute from "./routes/ProtectedRoute"
 import GuestRoute from "./routes/GuestRoute"
 import AdminRoute from "./routes/AdminRoute"
-
+import { PaymentPage } from "./pages/PaymentPage"
 export default function App() {
   const dispatch = useDispatch()
   const { isInitialized } = useSelector((state) => state.auth)
@@ -38,17 +38,20 @@ export default function App() {
         <Route path="/movie/:id" element={<MovieDetail />} />
         <Route path="/movies/:id" element={<MovieDetail />} />
 
-        <Route element={<GuestRoute />}>
+        <Route element={<GuestRoute/>}>
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
         </Route>
 
-        <Route element={<ProtectedRoute />}>
+        <Route element={<ProtectedRoute/>}>
           <Route path="/booking/:showtimeId" element={<SeatBooking />} />
           <Route path="/seat-booking/:showtimeId" element={<SeatBooking />} />
         </Route>
 
-        <Route element={<AdminRoute />}>
+        <Route element={<ProtectedRoute/>}>
+          <Route path="/payment-page" element={<PaymentPage/>}/>
+        </Route>
+        <Route element={<AdminRoute/>}>
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
         </Route>
 

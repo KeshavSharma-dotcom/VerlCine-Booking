@@ -2,18 +2,25 @@ import React from "react"
 import "../../assets/styles/movieDetail.css"
 
 export const MovieCastCrew = ({ movie = {} }) => {
-    const castList = Array.isArray(movie.cast)
-        ? movie.cast.join(", ")
-        : movie.cast || movie.actors || "Cast details arriving soon"
-
     const details = [
-        { label: "Director", value: movie.director },
-        { label: "Writers", value: movie.writer || movie.writers },
-        { label: "Starring Cast", value: castList },
-        { label: "Language", value: movie.language },
-        { label: "Box Office", value: movie.boxOffice },
-        { label: "Awards & Recognition", value: movie.awards && movie.awards !== "N/A" ? movie.awards : null }
-    ].filter((item) => Boolean(item.value))
+        { label: "Director", value: movie.director || movie.Director },
+        { label: "Writers", value: movie.writer || movie.writers || movie.Writer },
+        { label: "Starring Cast", value: movie.cast },
+        { label: "Language", value: movie.language || movie.Language },
+    ].filter((item) => Boolean(item.value) && item.value !== "N/A" && item.value !== "")
+
+    if (details.length === 0) {
+        return (
+            <section className="movie-detail-section">
+                <h2 className="movie-detail-section-title">Cast & Crew</h2>
+                <div className="movie-detail-about-card">
+                    <p style={{ color: "var(--color-text-muted, #94a3b8)", margin: 0 }}>
+                        Cast and crew details are not available for this title.
+                    </p>
+                </div>
+            </section>
+        )
+    }
 
     return (
         <section className="movie-detail-section">

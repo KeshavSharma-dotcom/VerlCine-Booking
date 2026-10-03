@@ -45,6 +45,11 @@ export const fetchMovieById = createAsyncThunk(
                 credentials: "include"
             })
 
+            const contentType = response.headers.get("content-type")
+            if (!contentType || !contentType.includes("application/json")) {
+                return rejectWithValue("Invalid API endpoint. Backend returned HTML instead of JSON.")
+            }
+
             const data = await response.json()
 
             if (!response.ok) {
@@ -178,11 +183,19 @@ export const fetchShowtimeDetails = createAsyncThunk(
     "movies/fetchShowtimeDetails",
     async (showtimeId, { rejectWithValue }) => {
         try {
-            const response = await fetch(`/api/showtimes/${showtimeId}`, {
+            let response = await fetch(`/api/v1/showtimes/${showtimeId}`, {
                 method: "GET",
                 headers: { "Content-Type": "application/json" },
                 credentials: "include"
             })
+
+            if (!response.ok) {
+                response = await fetch(`/api/showtimes/${showtimeId}`, {
+                    method: "GET",
+                    headers: { "Content-Type": "application/json" },
+                    credentials: "include"
+                })
+            }
 
             const data = await response.json()
 
@@ -190,7 +203,7 @@ export const fetchShowtimeDetails = createAsyncThunk(
                 return rejectWithValue(data.message || "Failed to load showtime details")
             }
 
-            return data.showtime
+            return data.showtime || data.data || data
         } catch (error) {
             return rejectWithValue(error.message || "Network error")
         }
@@ -201,12 +214,21 @@ export const createBooking = createAsyncThunk(
     "movies/createBooking",
     async ({ showtimeId, seats, totalPrice }, { rejectWithValue }) => {
         try {
-            const response = await fetch("/api/bookings", {
+            let response = await fetch("/api/v1/bookings", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 credentials: "include",
-                body: JSON.stringify({ showtimeId, seats, totalPrice })
+                body: JSON.stringify({ showtimeId, seats, totalAmount: totalPrice, totalPrice })
             })
+
+            if (!response.ok) {
+                response = await fetch("/api/bookings", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    credentials: "include",
+                    body: JSON.stringify({ showtimeId, seats, totalAmount: totalPrice, totalPrice })
+                })
+            }
 
             const data = await response.json()
 
@@ -214,7 +236,7 @@ export const createBooking = createAsyncThunk(
                 return rejectWithValue(data.message || "Failed to create booking")
             }
 
-            return data.booking
+            return data.booking || data.data || data
         } catch (error) {
             return rejectWithValue(error.message || "Network error")
         }

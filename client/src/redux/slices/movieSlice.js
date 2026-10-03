@@ -76,8 +76,8 @@ const movieSlice = createSlice({
             })
             .addCase(fetchMovies.fulfilled, (state, action) => {
                 state.loading = false
-                state.movies = action.payload.movies || (Array.isArray(action.payload) ? action.payload : [])
-                if (action.payload.pagination) {
+                state.movies = action.payload?.movies || (Array.isArray(action.payload) ? action.payload : [])
+                if (action.payload?.pagination) {
                     state.pagination = action.payload.pagination
                 }
             })
@@ -91,7 +91,7 @@ const movieSlice = createSlice({
             })
             .addCase(fetchMovieById.fulfilled, (state, action) => {
                 state.loading = false
-                state.selectedMovie = action.payload
+                state.selectedMovie = action.payload?.movie || action.payload
             })
             .addCase(fetchMovieById.rejected, (state, action) => {
                 state.loading = false
@@ -103,7 +103,8 @@ const movieSlice = createSlice({
             })
             .addCase(createMovie.fulfilled, (state, action) => {
                 state.actionLoading = false
-                state.movies.unshift(action.payload)
+                const created = action.payload?.movie || action.payload
+                state.movies.unshift(created)
                 state.successMessage = "Movie created successfully"
             })
             .addCase(createMovie.rejected, (state, action) => {
@@ -116,12 +117,13 @@ const movieSlice = createSlice({
             })
             .addCase(updateMovie.fulfilled, (state, action) => {
                 state.actionLoading = false
-                const index = state.movies.findIndex(m => m._id === action.payload._id)
+                const updated = action.payload?.movie || action.payload
+                const index = state.movies.findIndex((m) => m._id === updated._id)
                 if (index !== -1) {
-                    state.movies[index] = action.payload
+                    state.movies[index] = updated
                 }
-                if (state.selectedMovie?._id === action.payload._id) {
-                    state.selectedMovie = { ...state.selectedMovie, ...action.payload }
+                if (state.selectedMovie?._id === updated._id) {
+                    state.selectedMovie = { ...state.selectedMovie, ...updated }
                 }
                 state.successMessage = "Movie updated successfully"
             })
@@ -135,7 +137,7 @@ const movieSlice = createSlice({
             })
             .addCase(deleteMovie.fulfilled, (state, action) => {
                 state.actionLoading = false
-                state.movies = state.movies.filter(m => m._id !== action.payload)
+                state.movies = state.movies.filter((m) => m._id !== action.payload)
                 if (state.selectedMovie?._id === action.payload) {
                     state.selectedMovie = null
                 }
@@ -151,11 +153,12 @@ const movieSlice = createSlice({
             })
             .addCase(addShowtime.fulfilled, (state, action) => {
                 state.actionLoading = false
+                const showtime = action.payload?.showtime || action.payload
                 if (state.selectedMovie) {
                     if (!state.selectedMovie.showtimes) {
                         state.selectedMovie.showtimes = []
                     }
-                    state.selectedMovie.showtimes.push(action.payload)
+                    state.selectedMovie.showtimes.push(showtime)
                 }
                 state.successMessage = "Showtime scheduled successfully"
             })
@@ -171,7 +174,7 @@ const movieSlice = createSlice({
                 state.actionLoading = false
                 if (state.selectedMovie?.showtimes) {
                     state.selectedMovie.showtimes = state.selectedMovie.showtimes.filter(
-                        st => st._id !== action.payload
+                        (st) => st._id !== action.payload
                     )
                 }
                 state.successMessage = "Showtime cancelled successfully"

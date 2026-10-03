@@ -390,3 +390,67 @@
     cursor: pointer;
     margin-top: 1rem;
 }
+
+.seat-tier-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    margin-bottom: 2.75rem;
+}
+
+.seat-tier-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    max-width: 680px;
+    margin-bottom: 1.25rem;
+    position: relative;
+}
+
+.seat-tier-header::before,
+.seat-tier-header::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: var(--color-border-subtle, #334155);
+}
+
+.seat-tier-badge {
+    padding: 0 1rem;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    color: var(--color-text-secondary, #94a3b8);
+    text-transform: uppercase;
+}
+
+.seat-tier-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: center;
+    width: 100%;
+}
+
+.seat-aisle-gap {
+    width: 2rem;
+    pointer-events: none;
+    display: inline-block;
+}
+
+.seat-row {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+}
+
+.seat-row-label {
+    width: 24px;
+    text-align: center;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--color-text-muted, #64748b);
+    user-select: none;
+}

@@ -1,4 +1,4 @@
-import React from "react"
+import React, { useMemo } from "react"
 import "../../assets/styles/seatBooking.css"
 
 export const BookingCheckoutBar = ({
@@ -7,7 +7,11 @@ export const BookingCheckoutBar = ({
     bookingLoading,
     onConfirmBooking
 }) => {
-    const totalAmount = selectedSeats.length * ticketPrice
+    const totalAmount = useMemo(() => {
+        return selectedSeats.reduce((acc, seat) => {
+            return acc + (seat.price || ticketPrice)
+        }, 0)
+    }, [selectedSeats, ticketPrice])
 
     return (
         <div className="booking-checkout-bar">
@@ -22,6 +26,7 @@ export const BookingCheckoutBar = ({
             </div>
 
             <button
+                type="button"
                 onClick={onConfirmBooking}
                 disabled={selectedSeats.length === 0 || bookingLoading}
                 className="checkout-confirm-btn"
