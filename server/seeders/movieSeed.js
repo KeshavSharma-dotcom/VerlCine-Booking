@@ -1,20 +1,3 @@
-const path = require("path")
-const fs = require("fs")
-
-const envPaths = [
-    path.resolve(__dirname, "../../.env"),
-    path.resolve(__dirname, "../.env"),
-    path.resolve(process.cwd(), ".env")
-]
-
-for (const envPath of envPaths) {
-    if (fs.existsSync(envPath)) {
-        require("dotenv").config({ path: envPath })
-        break
-    }
-}
-require("dotenv").config()
-
 const mongoose = require("mongoose")
 const bcrypt = require("bcryptjs")
 const config = require("../config/config")

@@ -25,10 +25,34 @@ const movieSchema = new mongoose.Schema(
         },
         rating: {
             type: String,
-            enum: ["G", "PG", "PG-13", "R", "NC-17","TV-MA","Not Rated"],
-            // default: "PG-13"
+            enum: ["G", "PG", "PG-13", "R", "NC-17", "TV-MA", "TV-14", "Not Rated"],
+            default: "PG-13"
         },
         posterUrl: {
+            type: String,
+            default: ""
+        },
+        director: {
+            type: String,
+            default: ""
+        },
+        writer: {
+            type: String,
+            default: ""
+        },
+        cast: {
+            type: String,
+            default: ""
+        },
+        language: {
+            type: String,
+            default: "English"
+        },
+        boxOffice: {
+            type: String,
+            default: ""
+        },
+        awards: {
             type: String,
             default: ""
         },

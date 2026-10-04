@@ -49,6 +49,9 @@ const fetchOmdbMovieDetails = async (title) => {
             : ["Action", "Drama"],
         durationMinutes: parseDuration(data.Runtime),
         rating: data.Rated && data.Rated !== "N/A" ? data.Rated : "PG-13",
+        cast: data.Actors,
+        director: data.Director,
+        writer: data.Writer,
         posterUrl: data.Poster && data.Poster !== "N/A"
             ? data.Poster
             : "https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&w=1200&q=80",
@@ -57,7 +60,7 @@ const fetchOmdbMovieDetails = async (title) => {
 }
 
 const fetchLiveTheatricalMovies = async () => {
-    const key = process.env.OMDB_KEY || OMDB_API_KEY
+    const key = OMDB_API_KEY
     if (!key) {
         throw new Error("OMDB_KEY is missing in your .env file")
     }

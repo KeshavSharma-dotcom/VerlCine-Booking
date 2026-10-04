@@ -4,7 +4,21 @@ const Theatre = require("../models/Theatre")
 
 const createMovie = async (req, res, next) => {
     try {
-        const { title, description, genre, durationMinutes, rating, posterUrl, theatreId } = req.body
+        const {
+            title,
+            description,
+            genre,
+            durationMinutes,
+            rating,
+            posterUrl,
+            director,
+            writer,
+            cast,
+            language,
+            boxOffice,
+            awards,
+            theatreId
+        } = req.body
 
         if (!title || !description || !genre || !durationMinutes) {
             return res.status(400).json({ success: false, message: "Missing required movie details" })
@@ -28,10 +42,16 @@ const createMovie = async (req, res, next) => {
         const movie = await Movie.create({
             title: String(title).trim(),
             description: String(description).trim(),
-            genre: Array.isArray(genre) ? genre.map(g => String(g).trim()) : [String(genre).trim()],
+            genre: Array.isArray(genre) ? genre.map((g) => String(g).trim()) : [String(genre).trim()],
             durationMinutes: Number(durationMinutes),
             rating: rating ? String(rating) : "PG-13",
-            posterUrl: posterUrl ? String(posterUrl) : ""
+            posterUrl: posterUrl ? String(posterUrl) : "",
+            director: director ? String(director).trim() : "",
+            writer: writer ? String(writer).trim() : "",
+            cast: Array.isArray(cast) ? cast.map((c) => String(c).trim()) : typeof cast === "string" ? cast.split(",").map((c) => c.trim()) : [],
+            language: language ? String(language).trim() : "English",
+            boxOffice: boxOffice ? String(boxOffice).trim() : "",
+            awards: awards ? String(awards).trim() : ""
         })
 
         res.status(201).json({
@@ -60,7 +80,7 @@ const getAllMovies = async (req, res, next) => {
 
         if (req.query.theatreId) {
             const showtimes = await Showtime.find({ theatre: req.query.theatreId }).select("movie").lean()
-            const movieIds = showtimes.map(st => st.movie)
+            const movieIds = showtimes.map((st) => st.movie)
             filter._id = { $in: movieIds }
         }
 
@@ -105,11 +125,25 @@ const getMovieById = async (req, res, next) => {
 
 const updateMovie = async (req, res, next) => {
     try {
-        const { title, description, genre, durationMinutes, rating, posterUrl, isActive } = req.body
+        const {
+            title,
+            description,
+            genre,
+            durationMinutes,
+            rating,
+            posterUrl,
+            director,
+            writer,
+            cast,
+            language,
+            boxOffice,
+            awards,
+            isActive
+        } = req.body
 
         if (req.user.role === "theatre-admin") {
             const activeShowtimes = await Showtime.find({ movie: req.params.id }).populate("theatre")
-            const ownsAtLeastOne = activeShowtimes.some(st => st.theatre && st.theatre.owner.toString() === req.user._id.toString())
+            const ownsAtLeastOne = activeShowtimes.some((st) => st.theatre && st.theatre.owner.toString() === req.user._id.toString())
 
             if (!ownsAtLeastOne) {
                 return res.status(403).json({ success: false, message: "Forbidden. You have no active showtimes for this movie in your theatres" })
@@ -119,10 +153,16 @@ const updateMovie = async (req, res, next) => {
         const updateFields = {}
         if (title !== undefined) updateFields.title = String(title).trim()
         if (description !== undefined) updateFields.description = String(description).trim()
-        if (genre !== undefined) updateFields.genre = Array.isArray(genre) ? genre.map(g => String(g).trim()) : [String(genre).trim()]
+        if (genre !== undefined) updateFields.genre = Array.isArray(genre) ? genre.map((g) => String(g).trim()) : [String(genre).trim()]
         if (durationMinutes !== undefined) updateFields.durationMinutes = Number(durationMinutes)
         if (rating !== undefined) updateFields.rating = String(rating)
         if (posterUrl !== undefined) updateFields.posterUrl = String(posterUrl)
+        if (director !== undefined) updateFields.director = String(director).trim()
+        if (writer !== undefined) updateFields.writer = String(writer).trim()
+        if (cast !== undefined) updateFields.cast = Array.isArray(cast) ? cast.map((c) => String(c).trim()) : typeof cast === "string" ? cast.split(",").map((c) => c.trim()) : []
+        if (language !== undefined) updateFields.language = String(language).trim()
+        if (boxOffice !== undefined) updateFields.boxOffice = String(boxOffice).trim()
+        if (awards !== undefined) updateFields.awards = String(awards).trim()
         if (isActive !== undefined) updateFields.isActive = Boolean(isActive)
 
         const movie = await Movie.findByIdAndUpdate(
@@ -174,26 +214,59 @@ const addShowtime = async (req, res, next) => {
             return res.status(400).json({ success: false, message: "Invalid showtime start format" })
         }
 
-        const movie = await Movie.findById(movieId)
+        const [movie, theatre] = await Promise.all([
+            Movie.findById(movieId),
+            Theatre.findById(theatreId)
+        ])
+
         if (!movie) {
             return res.status(404).json({ success: false, message: "Movie not found" })
         }
 
-        const seatCount = Number(totalSeats) || 50
-        const generatedSeats = Array.from({ length: seatCount }, (_, idx) => ({
-            seatNumber: `${String.fromCharCode(65 + Math.floor(idx / 10))}${(idx % 10) + 1}`,
-            status: "available",
-            lockedBy: null,
-            lockedUntil: null
-        }))
+        if (!theatre) {
+            return res.status(404).json({ success: false, message: "Theatre not found" })
+        }
+
+        const seatCount = Number(totalSeats) || 60
+        const basePrice = Number(ticketPrice)
+        const seats = []
+        const seatsPerRow = 10
+        const totalRows = Math.ceil(seatCount / seatsPerRow)
+
+        for (let r = 0; r < totalRows; r++) {
+            const rowChar = String.fromCharCode(65 + r)
+            const isRecliner = r >= totalRows - 2
+            const isExecutive = r < 2
+            const tier = isRecliner ? "RECLINER" : isExecutive ? "EXECUTIVE" : "PREMIUM"
+            const seatPrice = isRecliner ? basePrice + 150 : isExecutive ? basePrice - 50 : basePrice
+
+            for (let c = 1; c <= seatsPerRow; c++) {
+                if (seats.length >= seatCount) break
+                seats.push({
+                    seatNumber: `${rowChar}${c}`,
+                    row: r,
+                    col: c,
+                    tier,
+                    price: seatPrice,
+                    status: "available",
+                    lockedBy: null,
+                    lockedUntil: null
+                })
+            }
+        }
 
         const showtime = await Showtime.create({
             movie: movieId,
             theatre: theatreId,
             screenNumber: Number(screenNumber),
             startTime: parsedStartTime,
-            ticketPrice: Number(ticketPrice),
-            seats: generatedSeats
+            ticketPrice: basePrice,
+            tierPricing: [
+                { name: "EXECUTIVE", price: basePrice - 50 },
+                { name: "PREMIUM", price: basePrice },
+                { name: "RECLINER", price: basePrice + 150 }
+            ],
+            seats
         })
 
         res.status(201).json({
