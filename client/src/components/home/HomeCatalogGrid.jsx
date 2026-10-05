@@ -6,7 +6,6 @@ export const HomeCatalogGrid = ({
     error,
     filteredCatalog,
     selectedCity,
-    isAuthenticated
 }) => {
     if (loading) {
         return (
@@ -45,7 +44,7 @@ export const HomeCatalogGrid = ({
                 {filteredCatalog.map((item) => (
                     <Link
                         key={item._id}
-                        to={isAuthenticated ? `/movie/${item._id}` : "/register"}
+                        to={`/movie/${item._id}`}
                         className="home-movie-card"
                     >
                         <div className="home-movie-img-container">

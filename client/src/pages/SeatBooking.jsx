@@ -145,7 +145,9 @@ export const SeatBooking = () => {
 
     const handleConfirmBooking = async () => {
         if (!isAuthenticated) {
-            navigate("/login")
+            navigate("/login", {
+                state :{ from : location.pathname}
+            })
             return
         }
 
@@ -182,7 +184,7 @@ export const SeatBooking = () => {
             const data = await res.json()
             if (!res.ok) throw new Error(data.message || "Booking creation failed")
 
-            navigate(`/booking-success/${data.booking?._id || ""}`)
+            navigate(`/payment-page/${data.booking?._id || ""}`)
         } catch (err) {
             alert(err.message || "Failed to reserve seats")
         } finally {

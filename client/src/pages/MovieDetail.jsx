@@ -112,7 +112,7 @@ export const MovieDetail = () => {
         })
     }, [showtimesData, selectedCity])
 
-    const handleSmoothScrollToTheatres = () => {
+    const handleBooking = () => {
         theatresRef.current?.scrollIntoView({ behavior: "smooth" })
     }
 
@@ -159,7 +159,7 @@ export const MovieDetail = () => {
                 movie={movie}
                 selectedCity={selectedCity}
                 onOpenCityModal={() => setIsCityModalOpen(true)}
-                onBookSeatsClick={handleSmoothScrollToTheatres}
+                onBookSeatsClick={handleBooking}
             />
 
             <main className="movie-detail-body">

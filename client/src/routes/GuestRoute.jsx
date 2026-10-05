@@ -3,7 +3,7 @@ import { Navigate, Outlet } from "react-router-dom"
 
 const GuestRoute = () => {
     const { isAuthenticated, isInitialized } = useSelector((state) => state.auth)
-
+    
     if (!isInitialized) {
         return null
     }

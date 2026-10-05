@@ -35,23 +35,21 @@ export default function App() {
       <Routes>
         <Route path="/" element={<Home />} />
 
-        <Route path="/movie/:id" element={<MovieDetail />} />
-        <Route path="/movies/:id" element={<MovieDetail />} />
-
-        <Route element={<GuestRoute/>}>
+        <Route element={<GuestRoute />}>
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
         </Route>
 
-        <Route element={<ProtectedRoute/>}>
-          <Route path="/booking/:showtimeId" element={<SeatBooking />} />
-          <Route path="/seat-booking/:showtimeId" element={<SeatBooking />} />
-        </Route>
+        <Route path="/movie/:id" element={<MovieDetail />} />
+        <Route path="/movies/:id" element={<MovieDetail />} />
+        
+        <Route path="/booking/:showtimeId" element={<SeatBooking />} />
+        <Route path="/seat-booking/:showtimeId" element={<SeatBooking />} />
 
-        <Route element={<ProtectedRoute/>}>
-          <Route path="/payment-page" element={<PaymentPage/>}/>
+        <Route element={<ProtectedRoute />}>
+          <Route path="/payment-page" element={<PaymentPage />} />
         </Route>
-        <Route element={<AdminRoute/>}>
+        <Route element={<AdminRoute />}>
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
         </Route>
 

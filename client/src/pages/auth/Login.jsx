@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react"
 import { useDispatch, useSelector } from "react-redux"
-import { Link, useNavigate } from "react-router-dom"
+import { Link, useNavigate, useLocation } from "react-router-dom"
 import { loginUserThunk, verify2FALoginThunk } from "../../redux/thunks/authThunks"
 import { clearAuthStatus, reset2FAState } from "../../redux/slices/authSlice"
 import namedLogo from "../../assets/images/namedLogo.png"
@@ -10,11 +10,11 @@ export const Login = () => {
     const [formData, setFormData] = useState({ email: "", password: "" })
     const [otp, setOtp] = useState("")
     const [validationError, setValidationError] = useState("")
-
+    const location = useLocation()
     const dispatch = useDispatch()
     const navigate = useNavigate()
     const { is2FARequired, loading, error, successMessage, isAuthenticated } = useSelector((state) => state.auth)
-
+    const targetRedirection = location.state?.from || "/"
     useEffect(() => {
         if (isAuthenticated) {
             navigate("/", { replace: true })
@@ -39,6 +39,7 @@ export const Login = () => {
         }
 
         dispatch(loginUserThunk(formData))
+        navigate(`${targetRedirection}`)
     }
 
     const handle2FA = (e) => {

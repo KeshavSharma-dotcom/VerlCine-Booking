@@ -3,7 +3,6 @@ import { Link } from "react-router-dom"
 
 export const HomeSpotlightBanner = ({
     featuredSpotlight,
-    isAuthenticated,
     selectedCity
 }) => {
     if (!featuredSpotlight) return null
@@ -25,7 +24,7 @@ export const HomeSpotlightBanner = ({
                 <p className="home-spotlight-desc">{featuredSpotlight.description}</p>
                 <div className="home-spotlight-actions">
                     <Link
-                        to={isAuthenticated ? `/seat-booking/${featuredSpotlight._id}` : "/register"}
+                        to={`/seat-booking/${featuredSpotlight._id}`}
                         className="home-spotlight-book-btn"
                     >
                         Book Seats
