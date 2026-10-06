@@ -10,7 +10,7 @@ const DEFAULT_LOCATION = {
 
 const POPULAR_CITIES = [
     {
-        name: "Delhi NCR",
+        name: "Delhi",
         lat: 28.6139,
         lng: 77.2090,
         iconSvg: '<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M12 56V22h40v34M16 16h32v6H16zM20 10h24v6H20z" /><path d="M24 56V34c0-4.4 3.6-8 8-8s8 3.6 8 8v22" /><path d="M8 56h48" /></svg>'
