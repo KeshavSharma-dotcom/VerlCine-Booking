@@ -14,6 +14,10 @@ const bookingSchema = new mongoose.Schema(
             required: [true, "Showtime reference is required"],
             index: true
         },
+        movie : {
+            type : mongoose.Schema.Types.ObjectId,
+            ref: "Movie"
+        },
         seatsBooked: {
             type: [String],
             required: [true, "At least one seat must be selected"],

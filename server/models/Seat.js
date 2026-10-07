@@ -13,6 +13,7 @@ const seatSchema = new mongoose.Schema(
             required: [true, "Seat number is required"],
             trim: true
         },
+        
         row: {
             type: Number,
             required: [true, "Row coordinate is required"],

@@ -107,10 +107,7 @@ export const Home = () => {
             <Navbar activeTab={activeTab} setActiveTab={handleTabChange} />
 
             <main className="home-content-wrap">
-                <HomeSpotlightBanner
-                    featuredSpotlight={featuredSpotlight}
-                    selectedCity={selectedCity}
-                />
+                
 
                 <HomeFeedControls
                     activeTab={activeTab}

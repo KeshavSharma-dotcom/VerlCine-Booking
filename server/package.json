@@ -3,9 +3,10 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
+  "type": "commonjs",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "nodemon server.js",
+    "start": "node --watch server.js",
     "seed:movies": "node seeders/movieSeed.js",
     "seed:shows": "node seeders/showSeed.js",
     "seed:all": "node seeders/movieSeed.js && node seeders/showSeed.js",
@@ -14,7 +15,6 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "commonjs",
   "dependencies": {
     "bcryptjs": "^3.0.3",
     "cloudinary": "^2.11.0",
@@ -27,11 +27,8 @@
     "mongoose": "^9.9.1",
     "multer": "^2.4.0",
     "node-cron": "^4.6.0",
-    "nodemailer": "^9.0.5",
+    "nodemailer": "^10.0.15",
     "qrcode": "^1.5.4",
     "socket.io": "^4.8.3"
-  },
-  "devDependencies": {
-    "nodemon": "^3.1.14"
   }
 }
