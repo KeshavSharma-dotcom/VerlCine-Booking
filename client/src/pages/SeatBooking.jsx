@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react"
-import { useParams, useNavigate } from "react-router-dom"
+import { useParams, useNavigate, useLocation } from "react-router-dom"
 import { useSelector } from "react-redux"
 import { io } from "socket.io-client"
 import {
@@ -9,17 +9,27 @@ import {
     BookingSeatLegend,
     BookingCheckoutBar
 } from "../components/booking/booking"
+import {
+    getSavedSeats,
+    saveSelectedSeats,
+    clearSavedSeats
+} from "../utils/seatStorage"
 import "../assets/styles/seatBooking.css"
 
 export const SeatBooking = () => {
     const { showtimeId, movieId } = useParams()
     const targetId = showtimeId || movieId
     const navigate = useNavigate()
+    const location = useLocation()
 
     const { isAuthenticated, user } = useSelector((state) => state.auth || {})
 
     const [showtime, setShowtime] = useState(null)
-    const [selectedSeats, setSelectedSeats] = useState([])
+    const [selectedSeats, setSelectedSeats] = useState(() => {
+        if (!targetId) return []
+        const saved = getSavedSeats(targetId)
+        return saved.seats || []
+    })
     const [loading, setLoading] = useState(true)
     const [bookingLoading, setBookingLoading] = useState(false)
     const [error, setError] = useState(null)
@@ -60,6 +70,20 @@ export const SeatBooking = () => {
                 }
 
                 setShowtime(resolved)
+
+                const saved = getSavedSeats(targetId)
+                if (saved.seats && saved.seats.length > 0) {
+                    const validSeats = saved.seats.filter((seatNum) => {
+                        const found = (resolved.seats || []).find((s) => s.seatNumber === (seatNum.seatNumber || seatNum))
+                        return found && found.status !== "booked"
+                    })
+                    const restoredSeats = validSeats.map((item) => {
+                        if (typeof item === "object") return item
+                        return (resolved.seats || []).find((s) => s.seatNumber === item) || { seatNumber: item }
+                    })
+                    setSelectedSeats(restoredSeats)
+                    saveSelectedSeats(targetId, restoredSeats, restoredSeats.length * (resolved.ticketPrice || 250))
+                }
             } catch (err) {
                 setError(err.message || "Failed to load seat layout")
             } finally {
@@ -99,9 +123,11 @@ export const SeatBooking = () => {
                 )
                 return { ...prev, seats: newSeats }
             })
-            setSelectedSeats((prev) =>
-                prev.filter((s) => !expiredSeatNumbers.includes(s.seatNumber))
-            )
+            setSelectedSeats((prev) => {
+                const updated = prev.filter((s) => !expiredSeatNumbers.includes(s.seatNumber || s))
+                saveSelectedSeats(targetId, updated, updated.length * 250)
+                return updated
+            })
         })
 
         return () => {
@@ -116,10 +142,11 @@ export const SeatBooking = () => {
         if (seat.status === "locked" && seat.lockedBy && seat.lockedBy !== user?._id) return
 
         const socketInstance = socketRef.current
-        const exists = selectedSeats.find((s) => s.seatNumber === seat.seatNumber)
+        const exists = selectedSeats.find((s) => (s.seatNumber || s) === seat.seatNumber)
 
+        let updatedSeats = []
         if (exists) {
-            setSelectedSeats((prev) => prev.filter((s) => s.seatNumber !== seat.seatNumber))
+            updatedSeats = selectedSeats.filter((s) => (s.seatNumber || s) !== seat.seatNumber)
             if (socketInstance && user?._id) {
                 socketInstance.emit("unlock-seat", {
                     showtimeId: targetId,
@@ -132,7 +159,7 @@ export const SeatBooking = () => {
                 alert("Maximum 8 seats per booking allowed")
                 return
             }
-            setSelectedSeats((prev) => [...prev, seat])
+            updatedSeats = [...selectedSeats, seat]
             if (socketInstance && user?._id) {
                 socketInstance.emit("lock-seat", {
                     showtimeId: targetId,
@@ -141,12 +168,16 @@ export const SeatBooking = () => {
                 })
             }
         }
+
+        setSelectedSeats(updatedSeats)
+        const pricePerTicket = showtime?.ticketPrice || 250
+        saveSelectedSeats(targetId, updatedSeats, updatedSeats.length * pricePerTicket)
     }
 
-    const handleConfirmBooking = async () => {
+    const handleConfirmBooking = () => {
         if (!isAuthenticated) {
             navigate("/login", {
-                state :{ from : location.pathname}
+                state: { from: location.pathname }
             })
             return
         }
@@ -156,40 +187,20 @@ export const SeatBooking = () => {
             return
         }
 
-        try {
-            setBookingLoading(true)
-            const seatNumbers = selectedSeats.map((s) => s.seatNumber)
-            const payload = {
+        const seatNumbers = selectedSeats.map((s) => s.seatNumber || s)
+        const pricePerTicket = showtime?.ticketPrice || 250
+        const total = selectedSeats.length * pricePerTicket
+
+        saveSelectedSeats(targetId, selectedSeats, total)
+
+        navigate(`/payment-page/${showtime._id}`, {
+            state: {
                 showtimeId: showtime._id,
-                seats: seatNumbers,
-                totalAmount: selectedSeats.length * (showtime.ticketPrice || 250)
+                seatsBooked: seatNumbers,
+                selectedSeats: selectedSeats,
+                showtime: showtime
             }
-
-            let res = await fetch("/api/v1/bookings", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                credentials: "include",
-                body: JSON.stringify(payload)
-            })
-
-            if (!res.ok) {
-                res = await fetch("/api/bookings", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    credentials: "include",
-                    body: JSON.stringify(payload)
-                })
-            }
-
-            const data = await res.json()
-            if (!res.ok) throw new Error(data.message || "Booking creation failed")
-
-            navigate(`/payment-page/${data.booking?._id || ""}`)
-        } catch (err) {
-            alert(err.message || "Failed to reserve seats")
-        } finally {
-            setBookingLoading(false)
-        }
+        })
     }
 
     if (loading) {

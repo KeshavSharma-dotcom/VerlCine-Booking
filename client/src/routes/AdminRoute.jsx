@@ -2,7 +2,7 @@ import React from "react"
 import { Navigate, Outlet, useLocation } from "react-router-dom"
 import { useSelector } from "react-redux"
 
-export const AdminRoute = ({ allowedRoles = ["admin", "theatre-admin", "theatre_admin"] }) => {
+export const AdminRoute = ({ allowedRoles = ["admin", "theatre-admin"] }) => {
     const location = useLocation()
     const { isAuthenticated, isInitialized, user } = useSelector((state) => state.auth)
 
