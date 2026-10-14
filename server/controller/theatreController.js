@@ -1,25 +1,56 @@
 const Theatre = require("../models/Theatre")
+const User = require("../models/User")
 const geoConfig = require("../config/geoConfig")
 const { buildNearSphereQuery, calculateDistanceKm } = require("../utils/geoUtils")
 const { syncCinemasFromOsm } = require("../services/theatreSyncService")
 
 const getAllTheatres = async (req, res, next) => {
     try {
-        const { city } = req.query
-        const query = { isActive: true }
+        const { city, active, limit = 50, page = 1 } = req.query
+        const query = {}
 
-        if (city) {
-            query.city = new RegExp(`^${String(city).trim()}$`, "i")
+        if (active !== undefined) {
+            query.isActive = active === "true"
         }
 
-        const theatres = await Theatre.find(query)
-            .populate("owner", "name email role")
-            .sort({ createdAt: -1 })
+        if (city && String(city).trim().length > 0) {
+            let cityPattern = String(city).trim()
+            if (/^(delhi|new\s*delhi|delhi\s*ncr)$/i.test(cityPattern)) {
+                cityPattern = "(New Delhi|Delhi NCR|Delhi)"
+            }
+            query.city = new RegExp(`^${cityPattern}$`, "i")
+        }
+
+        const skip = (Math.max(1, parseInt(page, 10)) - 1) * Math.min(100, Math.max(1, parseInt(limit, 10)))
+        const take = Math.min(100, Math.max(1, parseInt(limit, 10)))
+
+        const [theatres, total] = await Promise.all([
+            Theatre.find(query)
+                .populate("owner", "name email role")
+                .sort({ createdAt: -1 })
+                .skip(skip)
+                .limit(take)
+                .lean(),
+            Theatre.countDocuments(query)
+        ])
+
+        const formattedTheatres = theatres.map((t) => ({
+            ...t,
+            screenCount: Array.isArray(t.screens) ? t.screens.length : 0,
+            managerInfo: t.owner ? {
+                id: t.owner._id,
+                name: t.owner.name,
+                email: t.owner.email,
+                role: t.owner.role
+            } : null
+        }))
 
         res.status(200).json({
             success: true,
-            count: theatres.length,
-            theatres
+            total,
+            page: Number(page),
+            count: formattedTheatres.length,
+            theatres: formattedTheatres
         })
     } catch (err) {
         next(err)
@@ -59,7 +90,8 @@ const getNearbyTheatres = async (req, res, next) => {
             const distance = calculateDistanceKm(params.lat, params.lng, tLat, tLng)
             return {
                 ...t,
-                distanceKm: distance !== null ? distance : null
+                distanceKm: distance !== null ? distance : null,
+                screenCount: Array.isArray(t.screens) ? t.screens.length : 0
             }
         })
 
@@ -68,7 +100,8 @@ const getNearbyTheatres = async (req, res, next) => {
             origin: {
                 lat: params.lat,
                 lng: params.lng,
-                radiusKm: params.radiusKm
+                radiusKm: params.radiusKm,
+                city: params.city
             },
             count: enrichedTheatres.length,
             theatres: enrichedTheatres
@@ -101,7 +134,7 @@ const getTheatreById = async (req, res, next) => {
 
 const createTheatre = async (req, res, next) => {
     try {
-        const { name, city, address, screens, coordinates } = req.body
+        const { name, city, address, screens, coordinates, adminId, facilities, contactInfo } = req.body
 
         if (!name || !city || !address) {
             return res.status(400).json({
@@ -110,16 +143,34 @@ const createTheatre = async (req, res, next) => {
             })
         }
 
+        let assignedOwner = null
+        if (adminId) {
+            const candidate = await User.findById(adminId)
+            if (!candidate) {
+                return res.status(404).json({
+                    success: false,
+                    message: "Specified theatre admin user not found"
+                })
+            }
+            assignedOwner = candidate._id
+        } else if (req.user?.role === "theatre-admin") {
+            assignedOwner = req.user._id
+        }
+
         const formattedScreens = Array.isArray(screens) && screens.length > 0
             ? screens.map((s, idx) => ({
                 screenNumber: Number(s.screenNumber) || (idx + 1),
-                totalSeats: Number(s.totalSeats)
+                totalSeats: Number(s.totalSeats) || 60
             }))
-            : []
+            : [{ screenNumber: 1, totalSeats: 60 }]
 
-        const finalCoordinates = Array.isArray(coordinates) && coordinates.length === 2
-            ? [Number(coordinates[0]), Number(coordinates[1])]
-            : [geoConfig.defaultCoordinates.lng, geoConfig.defaultCoordinates.lat]
+        let finalCoordinates = [geoConfig.defaultCoordinates.lng, geoConfig.defaultCoordinates.lat]
+        if (Array.isArray(coordinates) && coordinates.length === 2) {
+            const [lng, lat] = coordinates.map(Number)
+            if (Number.isFinite(lng) && Number.isFinite(lat)) {
+                finalCoordinates = [lng, lat]
+            }
+        }
 
         const theatre = await Theatre.create({
             name: String(name).trim(),
@@ -130,7 +181,9 @@ const createTheatre = async (req, res, next) => {
                 coordinates: finalCoordinates
             },
             screens: formattedScreens,
-            owner: req.user?._id,
+            owner: assignedOwner,
+            facilities: Array.isArray(facilities) ? facilities.map(f => String(f).trim()) : [],
+            contactInfo: contactInfo || {},
             isActive: true
         })
 
@@ -146,7 +199,7 @@ const createTheatre = async (req, res, next) => {
 
 const updateTheatre = async (req, res, next) => {
     try {
-        const { name, city, address, screens, isActive, coordinates } = req.body
+        const { name, city, address, screens, isActive, coordinates, facilities, contactInfo } = req.body
 
         const theatre = await Theatre.findById(req.params.id)
 
@@ -163,17 +216,31 @@ const updateTheatre = async (req, res, next) => {
         if (typeof isActive === "boolean") theatre.isActive = isActive
 
         if (Array.isArray(coordinates) && coordinates.length === 2) {
-            theatre.location = {
-                type: "Point",
-                coordinates: [Number(coordinates[0]), Number(coordinates[1])]
+            const [lng, lat] = coordinates.map(Number)
+            if (Number.isFinite(lng) && Number.isFinite(lat)) {
+                theatre.location = {
+                    type: "Point",
+                    coordinates: [lng, lat]
+                }
             }
         }
 
-        if (Array.isArray(screens)) {
+        if (Array.isArray(screens) && screens.length > 0) {
             theatre.screens = screens.map((s, idx) => ({
                 screenNumber: Number(s.screenNumber) || (idx + 1),
-                totalSeats: Number(s.totalSeats)
+                totalSeats: Number(s.totalSeats) || 60
             }))
+        }
+
+        if (Array.isArray(facilities)) {
+            theatre.facilities = facilities.map(f => String(f).trim())
+        }
+
+        if (contactInfo && typeof contactInfo === "object") {
+            theatre.contactInfo = {
+                ...theatre.contactInfo,
+                ...contactInfo
+            }
         }
 
         const updatedTheatre = await theatre.save()
@@ -182,6 +249,121 @@ const updateTheatre = async (req, res, next) => {
             success: true,
             message: "Theatre updated successfully",
             theatre: updatedTheatre
+        })
+    } catch (err) {
+        next(err)
+    }
+}
+
+const assignTheatreAdmin = async (req, res, next) => {
+    try {
+        const { adminId } = req.body
+        const theatreId = req.params.id
+
+        if (!adminId) {
+            return res.status(400).json({
+                success: false,
+                message: "adminId is required to assign a manager"
+            })
+        }
+
+        const [theatre, user] = await Promise.all([
+            Theatre.findById(theatreId),
+            User.findById(adminId)
+        ])
+
+        if (!theatre) {
+            return res.status(404).json({
+                success: false,
+                message: "Theatre not found"
+            })
+        }
+
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: "Target user not found"
+            })
+        }
+
+        if (user.role !== "theatre-admin" && user.role !== "admin") {
+            user.role = "theatre-admin"
+            await user.save()
+        }
+
+        theatre.owner = user._id
+        await theatre.save()
+
+        res.status(200).json({
+            success: true,
+            message: "Theatre admin assigned successfully",
+            theatreId: theatre._id,
+            assignedAdmin: {
+                id: user._id,
+                name: user.name,
+                email: user.email,
+                role: user.role
+            }
+        })
+    } catch (err) {
+        next(err)
+    }
+}
+
+const getTheatreAdminProfile = async (req, res, next) => {
+    try {
+        const theatre = await Theatre.findOne({ owner: req.user._id, isActive: true })
+            .populate("owner", "name email role")
+
+        if (!theatre) {
+            return res.status(404).json({
+                success: false,
+                message: "No active theatre found assigned to this admin"
+            })
+        }
+
+        res.status(200).json({
+            success: true,
+            theatre
+        })
+    } catch (err) {
+        next(err)
+    }
+}
+
+const updateTheatreAdminProfile = async (req, res, next) => {
+    try {
+        const { facilities, contactInfo, name, address } = req.body
+
+        const theatre = await Theatre.findOne({ owner: req.user._id, isActive: true })
+
+        if (!theatre) {
+            return res.status(404).json({
+                success: false,
+                message: "No active theatre found assigned to this admin"
+            })
+        }
+
+        if (Array.isArray(facilities)) {
+            theatre.facilities = facilities.map((f) => String(f).trim())
+        }
+
+        if (contactInfo && typeof contactInfo === "object") {
+            theatre.contactInfo = {
+                ...theatre.contactInfo,
+                ...contactInfo
+            }
+        }
+
+        if (name) theatre.name = String(name).trim()
+        if (address) theatre.address = String(address).trim()
+
+        const savedTheatre = await theatre.save()
+
+        res.status(200).json({
+            success: true,
+            message: "Theatre profile updated successfully",
+            theatre: savedTheatre
         })
     } catch (err) {
         next(err)
@@ -214,10 +396,22 @@ const deleteTheatre = async (req, res, next) => {
 
 const getDistinctCities = async (req, res, next) => {
     try {
-        const cities = await Theatre.distinct("city", { isActive: true })
+        const cityAggregation = await Theatre.aggregate([
+            { $match: { isActive: true } },
+            {
+                $group: {
+                    _id: "$city",
+                    theatreCount: { $sum: 1 } } }, {$sort: { _id: 1 } }
+        ])
+
+        const cities = cityAggregation.map((c) => ({
+            city: c._id,
+            theatreCount: c.theatreCount
+        }))
+
         res.status(200).json({
             success: true,
-            cities: cities.sort()
+            cities
         })
     } catch (err) {
         next(err)
@@ -254,6 +448,9 @@ module.exports = {
     getTheatreById,
     createTheatre,
     updateTheatre,
+    assignTheatreAdmin,
+    getTheatreAdminProfile,
+    updateTheatreAdminProfile,
     deleteTheatre,
     getDistinctCities,
     triggerOsmSync
