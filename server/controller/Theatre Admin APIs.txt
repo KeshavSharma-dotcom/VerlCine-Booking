@@ -1,0 +1,37 @@
+1. Theater Dashboard
+GET /api/v1/theater-admin/dashboard/summary — Specific cinema's metrics: today's revenue, occupancy rate %, and bookings.
+
+GET /api/v1/theater-admin/dashboard/today-schedule — Shows running today across the theater's screens with real-time seat capacities.
+
+2. Screen Layouts (Floor Plan Designer)
+POST /api/v1/theater-admin/screens — Save visual canvas floor plan (row, col, aisle, seat category).
+
+GET /api/v1/theater-admin/screens — Fetch saved screen layouts for this theater.
+
+PUT /api/v1/theater-admin/screens/:screenId — Update auditorium layout dimensions, aisle gaps, or seat tier allocations.
+
+3. Show Scheduling & Dynamic Pricing
+POST /api/v1/theater-admin/shows — Create a showtime with schedule collision detection (movie.durationMinutes + 20 min buffer) and generate seat inventory.
+
+GET /api/v1/theater-admin/shows — Filter theater shows by date, movie, or auditorium.
+
+PATCH /api/v1/theater-admin/shows/:showId/pricing — Update seat prices per tier (Regular, Gold, Platinum).
+
+4. Seat Inventory Holds
+POST /api/v1/theater-admin/shows/:showId/seats/block — Hold or block seats for maintenance or VIPs (blocked status).
+
+POST /api/v1/theater-admin/shows/:showId/seats/unblock — Return blocked seats back to the public available pool.
+
+5. Box Office & Gate Check-in
+POST /api/v1/theater-admin/check-in/verify — Scan ticket QR code/booking ID and return verification state.
+
+POST /api/v1/theater-admin/check-in/admit — Mark verified ticket as admitted / checked-in to prevent reuse.
+
+POST /api/v1/theater-admin/box-office/book — Direct walk-in counter ticket POS booking without an online user session.
+
+6. Reports & Payout Statements
+GET /api/v1/theater-admin/bookings — Filterable booking history for the manager's theater.
+
+GET /api/v1/theater-admin/reports/occupancy — Occupancy analytics segmented by screening time slot.
+
+GET /api/v1/theater-admin/reports/payouts — Partner payout history and deducted platform convenience fees.

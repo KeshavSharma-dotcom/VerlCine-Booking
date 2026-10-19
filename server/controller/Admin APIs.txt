@@ -1,0 +1,29 @@
+1. KPI & Analytics
+
+GET /api/v1/admin/dashboard/metrics — Aggregate platform Gross Merchandise Value (GMV), total tickets sold, active cinemas, and active movies.
+
+GET /api/v1/admin/dashboard/revenue-analytics — Daily/monthly time-series transaction totals and 16% platform convenience fee cut.
+
+GET /api/v1/admin/dashboard/top-performing — Ranked rankings of top grossing movies, theaters, and operational cities.
+
+2. User Governance
+GET /api/v1/admin/users — Paginated list of users with filtering by role (customer, theatre-admin, admin).
+
+PATCH /api/v1/admin/users/:userId/role — Update a user's role (e.g., promote a customer to theatre-admin).
+
+PATCH /api/v1/admin/users/:userId/status — Suspend or activate a user account (isBlocked / isActive).
+
+3. Movie Catalog
+PATCH /api/v1/admin/movies/:id/toggle-status — Dedicated fast toggle to enable/disable a movie's isActive flag.
+
+Cloudinary file upload pipeline attached to POST /api/v1/admin/movies and PUT /api/v1/admin/movies/:id (handling multipart poster images).
+
+4. Settlement & Platform Finance
+GET /api/v1/admin/finance/transactions — Master audit log of payment records across all theaters.
+
+GET /api/v1/admin/finance/settlements — Theater settlement balance ledger (gross ticket revenue minus platform commission).
+
+POST /api/v1/admin/finance/settlements/:theaterId/mark-paid — Record payout disbursement to cinema partners.
+
+5. Promotions
+POST /api/v1/admin/coupons — Create discount coupon codes with minimum spend, discount type, and expiry constraints.
